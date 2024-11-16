@@ -1,4 +1,4 @@
-import { MouseEventHandler, useState } from "react";
+import { FocusEvent, MouseEventHandler, useState } from "react";
 import { Button } from "./components/ui/button";
 import {
   ChevronDown,
@@ -7,6 +7,7 @@ import {
   Folder,
   SquarePen,
 } from "lucide-react";
+import { Input } from "./components/ui/input";
 
 type Tree = {
   name: string;
@@ -79,7 +80,12 @@ const TreeNode = ({ node, level = 0 }: { node: Tree; level?: number }) => {
   const hasChildren = node.children && node.children.length > 0;
   const handleEdit: MouseEventHandler<SVGSVGElement> = (e) => {
     e.stopPropagation();
-    console.log("wow");
+    setIsEditing(!isEditing);
+  };
+  const saveEdit = (e: FocusEvent<HTMLInputElement>) => {
+    // set为新的name
+    console.log(e.target.value, "e");
+    setIsEditing(false);
   };
   return (
     <div className="select-none">
@@ -103,7 +109,16 @@ const TreeNode = ({ node, level = 0 }: { node: Tree; level?: number }) => {
             <FileText className="w-4 h-4 mr-2 text-gray-500" />
           </>
         )}
-        {isEditing ? <span>{node.name}</span> : <span>{node.name}</span>}
+        {isEditing ? (
+          <Input
+            autoFocus
+            onClick={(e) => e.stopPropagation()}
+            onBlur={(e) => saveEdit(e)}
+            defaultValue={node.name}
+          />
+        ) : (
+          <span>{node.name}</span>
+        )}
         <SquarePen
           onClick={handleEdit}
           className="w-4 h-4 ml-auto text-gray-500 hover:text-blue-500"
