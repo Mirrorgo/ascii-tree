@@ -1,7 +1,23 @@
 # ASCII folder structure diagrams
+## 当前已有功能
+- folder view
+  - 基础交互
+    - 增
+      - add child
+      - add sibling
+      - 备注
+        - 选中多个节点时所有增无效
+    - 删
+      - 删除单个节点
+      - 删除多个节点
+    - 改
+      - 修改节点名称
+    - 多选
+      - ctrl+鼠标单击
+      - shift+鼠标单击
 
 
-
+# 后续idea
 
 ## ai powered 小功能
 
@@ -11,6 +27,17 @@
   - esc退出且不保存
 - up&down挑选条目
 - enter 进入编辑条目
+- folder view
+  - alt+上下直接切换同级节点顺序，能跨母节点
+  - 比如直接切换folder以及folder里面所有内容的顺序
+  - 比如从 folder2的第一个节点直接切换到folder1的最后一个节点
+- md view
+  - 类似vscode里面快速文件编辑的操作
+  - alt+上下可以直接交换行，tab操作缩进
+    - 这种很容易出现非法目录结构，需要停止目录渲染，且标注出来实际错误在哪（md view内部）
+
+- undo，redo为跨分区的操作，全部都需要支持原子化
+  - 可以先folder视图操作，然后md视图操作，最后terminal视图操作。此时还能连续undo，redo
 
 > 三分区： markdown，
 >
