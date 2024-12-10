@@ -9,6 +9,7 @@ import {
   SquarePen,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import TextEditor from "./components/mg/text-editor";
 
 type TreeNode = {
   id: string;
@@ -48,42 +49,43 @@ function getNodesBetween(
 
   return allIds.slice(start, end + 1);
 }
+const initialTree: TreeNode = {
+  id: "root",
+  name: "root",
+  children: [
+    {
+      id: "1",
+      name: "folder1",
+      children: [
+        {
+          id: "2",
+          name: "file1",
+        },
+        {
+          id: "3",
+          name: "file2",
+        },
+      ],
+    },
+    {
+      id: "4",
+      name: "folder2",
+      children: [
+        {
+          id: "5",
+          name: "file3",
+        },
+        {
+          id: "6",
+          name: "file4",
+        },
+      ],
+    },
+  ],
+};
 
 function App() {
-  const [fileTree, setFileTree] = useState<TreeNode>({
-    id: "root",
-    name: "root",
-    children: [
-      {
-        id: "1",
-        name: "folder1",
-        children: [
-          {
-            id: "2",
-            name: "file1",
-          },
-          {
-            id: "3",
-            name: "file2",
-          },
-        ],
-      },
-      {
-        id: "4",
-        name: "folder2",
-        children: [
-          {
-            id: "5",
-            name: "file3",
-          },
-          {
-            id: "6",
-            name: "file4",
-          },
-        ],
-      },
-    ],
-  });
+  const [fileTree, setFileTree] = useState<TreeNode>(initialTree);
 
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
 
@@ -263,6 +265,10 @@ function App() {
     }
   };
 
+  const handleChange = (value: string) => {
+    console.log("Editor content:", value);
+  };
+
   return (
     <div className="h-screen flex flex-col">
       <div className="w-full border-b p-2">
@@ -329,8 +335,17 @@ function App() {
             }
           />
         </div>
-        <div className="flex-1 p-2 font-mono whitespace-pre">
-          {generateAscii(fileTree)}
+        <div>
+          <div>
+            <div className="flex-1 p-2 font-mono whitespace-pre">
+              {generateAscii(fileTree)}
+            </div>
+            <TextEditor
+              initialValue="- 第一项"
+              onChange={handleChange}
+              className="w-72"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -376,8 +391,8 @@ const TreeNodeComponent = ({
   return (
     <div className="select-none">
       <div
-        className={`flex items-center hover:bg-gray-100 rounded px-2 py-1 cursor-pointer ${
-          isSelected ? "bg-blue-100 hover:bg-blue-200" : ""
+        className={`flex items-center rounded px-2 py-1 cursor-pointer ${
+          isSelected ? "bg-blue-200" : "hover:bg-gray-100"
         }`}
         style={{ paddingLeft: `${level * 16}px` }}
         onClick={handleNodeClick}
