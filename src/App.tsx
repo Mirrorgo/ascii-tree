@@ -18,6 +18,12 @@ import {
 import { Input } from "@/components/ui/input";
 import TextEditor from "./components/mg/text-editor";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./components/ui/accordion";
 
 type TreeNode = {
   id: string;
@@ -595,9 +601,17 @@ function App() {
         </div>
         <div>
           <div>
-            <div className="flex-1 p-2 font-mono whitespace-pre">
-              {generateAscii(fileTree)}
-            </div>
+            <Accordion type="multiple">
+              <AccordionItem value="ascii-tree">
+                <AccordionTrigger>ascii-tree</AccordionTrigger>
+                <AccordionContent>
+                  <div className="flex-1 p-2 font-mono whitespace-pre">
+                    {generateAscii(fileTree)}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
             <TextEditor
               initialValue={textState.content}
               onChange={handleEditorChange}
