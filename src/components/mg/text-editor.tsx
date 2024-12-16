@@ -30,6 +30,11 @@ const TextEditor: FC<EditorProps> = ({
   const [content, setContent] = useState<string>(initialValue);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
+  // 添加这个 useEffect 来监听 initialValue 的变化
+  useEffect(() => {
+    setContent(initialValue);
+  }, [initialValue]);
+
   const parseListItem = (line: string): ListItemMatch | null => {
     const match = line.match(/^(\s*)(- )(.*)/);
     if (!match) return null;

@@ -1,6 +1,13 @@
-import { FocusEvent, MouseEventHandler, useState } from "react";
+import {
+  FocusEvent,
+  MouseEventHandler,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { Button } from "@/components/ui/button";
 import {
+  AlertTriangle,
   ChevronDown,
   ChevronRight,
   FileText,
@@ -10,12 +17,30 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import TextEditor from "./components/mg/text-editor";
+import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
 
 type TreeNode = {
   id: string;
   name: string;
   children?: TreeNode[];
 };
+
+interface TreeState {
+  tree: TreeNode;
+  selectedNodeIds: string[];
+  lastSelectedId: string | null;
+}
+
+interface TextState {
+  content: string;
+  isValid: boolean;
+  error?: string;
+}
+
+interface HistoryEntry {
+  tree: TreeState;
+  text: TextState;
+}
 
 function generateId() {
   return Math.random().toString(36).substring(2, 9);
@@ -84,6 +109,76 @@ const initialTree: TreeNode = {
   ],
 };
 
+// 新增的转换函数
+function treeToMarkdown(node: TreeNode, level = 0): string {
+  const indent = "  ".repeat(level);
+  let result = `${indent}- ${node.name}\n`;
+
+  if (node.children && node.children.length > 0) {
+    result += node.children
+      .map((child) => treeToMarkdown(child, level + 1))
+      .join("");
+  }
+
+  return result;
+}
+
+function markdownToTree(text: string): {
+  tree: TreeNode | null;
+  error: string | null;
+} {
+  try {
+    const lines = text.split("\n").filter((line) => line.trim());
+    // 创建一个临时的根节点
+    const tempRoot: TreeNode = { id: "root", name: "root", children: [] };
+    const stack: { node: TreeNode; level: number }[] = [
+      { node: tempRoot, level: -1 },
+    ];
+
+    lines.forEach((line, index) => {
+      const match = line.match(/^(\s*)-\s+(.+)$/);
+      if (!match) {
+        throw `Invalid line format at line ${index + 1}`;
+      }
+
+      const level = match[1].length / 2;
+      const name = match[2];
+
+      while (stack.length > 1 && stack[stack.length - 1].level >= level) {
+        stack.pop();
+      }
+
+      const newNode: TreeNode = {
+        id: generateId(),
+        name,
+        children: [],
+      };
+
+      const parent = stack[stack.length - 1].node;
+      if (!parent.children) parent.children = [];
+      parent.children.push(newNode);
+      stack.push({ node: newNode, level });
+    });
+
+    // 如果第一个节点就是我们要的根节点，直接返回它
+    if (tempRoot.children && tempRoot.children.length === 1) {
+      return { tree: tempRoot.children[0], error: null };
+    } else {
+      // 如果有多个顶级节点，创建一个新的根节点包含它们
+      return {
+        tree: {
+          id: "root",
+          name: "root",
+          children: tempRoot.children,
+        },
+        error: null,
+      };
+    }
+  } catch (error) {
+    return { tree: null, error: error as string };
+  }
+}
+
 function App() {
   const [fileTree, setFileTree] = useState<TreeNode>(initialTree);
 
@@ -91,24 +186,115 @@ function App() {
 
   const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
 
+  // 文本状态
+  const [textState, setTextState] = useState<TextState>({
+    content: treeToMarkdown(initialTree),
+    isValid: true,
+  });
+
+  // 历史记录状态
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isTreeLocked, setIsTreeLocked] = useState(false);
+
+  // 初始化历史记录
+  useEffect(() => {
+    if (history.length === 0) {
+      const initialEntry: HistoryEntry = {
+        tree: {
+          tree: fileTree,
+          selectedNodeIds,
+          lastSelectedId,
+        },
+        text: {
+          content: treeToMarkdown(fileTree),
+          isValid: true,
+        },
+      };
+      setHistory([initialEntry]);
+      setHistoryIndex(0);
+    }
+  }, []);
+
+  // 添加新的历史记录
+  const addToHistory = useCallback(
+    (treeState: TreeState, textState: TextState) => {
+      const newHistory = history.slice(0, historyIndex + 1);
+      newHistory.push({ tree: treeState, text: textState });
+      setHistory(newHistory);
+      setHistoryIndex(newHistory.length - 1);
+    },
+    [history, historyIndex]
+  );
+
+  // 更新文本编辑器变更处理
+  const handleEditorChange = (value: string) => {
+    setTextState({
+      content: value,
+      isValid: true,
+    });
+
+    const { tree, error } = markdownToTree(value);
+    if (error) {
+      setTextState((prev) => ({
+        ...prev,
+        isValid: false,
+        error,
+      }));
+      setIsTreeLocked(true);
+    } else if (tree) {
+      const newTree = { ...tree, id: fileTree.id };
+      setFileTree(newTree);
+      setIsTreeLocked(false);
+
+      addToHistory(
+        { tree: newTree, selectedNodeIds, lastSelectedId },
+        { content: value, isValid: true }
+      );
+    }
+  };
+
+  // 添加撤销/重做功能
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const prevState = history[historyIndex - 1];
+      setFileTree(prevState.tree.tree);
+      setSelectedNodeIds(prevState.tree.selectedNodeIds);
+      setLastSelectedId(prevState.tree.lastSelectedId);
+      setTextState(prevState.text);
+      setHistoryIndex((prev) => prev - 1);
+      setIsTreeLocked(false);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const nextState = history[historyIndex + 1];
+      setFileTree(nextState.tree.tree);
+      setSelectedNodeIds(nextState.tree.selectedNodeIds);
+      setLastSelectedId(nextState.tree.lastSelectedId);
+      setTextState(nextState.text);
+      setHistoryIndex((prev) => prev + 1);
+      setIsTreeLocked(false);
+    }
+  };
+
   const addChildNode = () => {
-    if (selectedNodeIds.length > 1) return; // 选中多个节点时禁用添加功能
+    if (selectedNodeIds.length > 1) return;
+
+    let newTree: TreeNode;
     if (selectedNodeIds.length === 0) {
-      // 如果没有选中节点，添加到根节点
       const newNode: TreeNode = {
         id: generateId(),
         name: "New Node",
       };
-      setFileTree((prev) => ({
-        ...prev,
-        children: [...(prev.children || []), newNode],
-      }));
-      return;
+      newTree = {
+        ...fileTree,
+        children: [...(fileTree.children || []), newNode],
+      };
     } else {
-      // 此时只需要考虑选中的节点数量为1的情况，因为更大的时候会禁用添加功能
-      const selectedNodeId = selectedNodeIds[0];
       const addNodeToParent = (node: TreeNode): TreeNode => {
-        if (node.id === selectedNodeId) {
+        if (node.id === selectedNodeIds[0]) {
           return {
             ...node,
             children: [
@@ -128,26 +314,31 @@ function App() {
         }
         return node;
       };
-
-      setFileTree(addNodeToParent);
+      newTree = addNodeToParent(fileTree);
     }
 
-    // 在选中的节点下添加子节点
+    setFileTree(newTree);
+    const newText = treeToMarkdown(newTree);
+    setTextState({
+      content: newText,
+      isValid: true,
+    });
+
+    addToHistory(
+      { tree: newTree, selectedNodeIds, lastSelectedId },
+      { content: newText, isValid: true }
+    );
   };
 
   const addSiblingNode = () => {
-    if (selectedNodeIds.length > 1) return; // 选中多个节点时禁用添加功能
-    if (selectedNodeIds.length === 0) return; // 没有选中节点时禁用添加功能
+    if (selectedNodeIds.length > 1) return;
+    if (selectedNodeIds.length === 0) return;
 
-    // 选中的节点数量为1的情况
     const selectedNodeId = selectedNodeIds[0];
-    if (!selectedNodeId || selectedNodeId === "root") {
-      return; // 根节点没有同级节点
-    }
+    if (!selectedNodeId || selectedNodeId === "root") return;
 
     const addSibling = (node: TreeNode): TreeNode => {
       if (node.children?.some((child) => child.id === selectedNodeId)) {
-        // 找到了父节点
         return {
           ...node,
           children: [
@@ -168,10 +359,22 @@ function App() {
       return node;
     };
 
-    setFileTree(addSibling);
-  };
+    const newTree = addSibling(fileTree);
+    setFileTree(newTree);
 
-  // 在 App 组件中添加删除函数
+    const newText = treeToMarkdown(newTree);
+    console.log("new text", newText);
+
+    setTextState({
+      content: newText,
+      isValid: true,
+    });
+
+    addToHistory(
+      { tree: newTree, selectedNodeIds, lastSelectedId },
+      { content: newText, isValid: true }
+    );
+  };
   const deleteNode = () => {
     if (selectedNodeIds.includes("root")) return;
     if (selectedNodeIds.length === 0) return;
@@ -190,8 +393,21 @@ function App() {
       return node;
     };
 
-    setFileTree(removeNodes);
+    const newTree = removeNodes(fileTree);
+    setFileTree(newTree);
     setSelectedNodeIds([]); // 删除后清除选中状态
+
+    // 添加这些代码
+    const newText = treeToMarkdown(newTree);
+    setTextState({
+      content: newText,
+      isValid: true,
+    });
+
+    addToHistory(
+      { tree: newTree, selectedNodeIds: [], lastSelectedId: null },
+      { content: newText, isValid: true }
+    );
   };
 
   const updateNode = (nodeId: string, newName: string) => {
@@ -207,7 +423,21 @@ function App() {
       }
       return node;
     };
-    setFileTree(updateTreeNode(fileTree));
+
+    const newTree = updateTreeNode(fileTree);
+    setFileTree(newTree);
+
+    // 添加这些代码
+    const newText = treeToMarkdown(newTree);
+    setTextState({
+      content: newText,
+      isValid: true,
+    });
+
+    addToHistory(
+      { tree: newTree, selectedNodeIds, lastSelectedId },
+      { content: newText, isValid: true }
+    );
   };
 
   const generateAscii = (
@@ -265,10 +495,6 @@ function App() {
     }
   };
 
-  const handleChange = (value: string) => {
-    console.log("Editor content:", value);
-  };
-
   return (
     <div className="h-screen flex flex-col">
       <div className="w-full border-b p-2">
@@ -320,8 +546,20 @@ function App() {
           >
             Delete
           </Button>
-          <Button variant="link">undo</Button>
-          <Button variant="link">redo</Button>
+          <Button
+            variant="link"
+            onClick={handleUndo}
+            disabled={historyIndex <= 0}
+          >
+            undo
+          </Button>
+          <Button
+            variant="link"
+            onClick={handleRedo}
+            disabled={historyIndex >= history.length - 1}
+          >
+            redo
+          </Button>
         </div>
       </div>
       <div className="flex flex-1 gap-2">
@@ -333,6 +571,7 @@ function App() {
             onSelectNode={(id, ctrlKey, shiftKey) =>
               handleNodeSelection(id, ctrlKey, shiftKey)
             }
+            disabled={isTreeLocked}
           />
         </div>
         <div>
@@ -341,10 +580,17 @@ function App() {
               {generateAscii(fileTree)}
             </div>
             <TextEditor
-              initialValue="- 第一项"
-              onChange={handleChange}
+              initialValue={textState.content}
+              onChange={handleEditorChange}
               className="w-72"
             />
+            {!textState.isValid && (
+              <Alert variant="destructive" className="mt-2">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Parse Error</AlertTitle>
+                <AlertDescription>{textState.error}</AlertDescription>
+              </Alert>
+            )}
           </div>
         </div>
       </div>
@@ -358,12 +604,14 @@ const TreeNodeComponent = ({
   onUpdate,
   selectedNodeIds,
   onSelectNode,
+  disabled,
 }: {
   node: TreeNode;
   level?: number;
   onUpdate: (id: string, newName: string) => void;
   selectedNodeIds: string[];
   onSelectNode: (id: string, ctrlKey: boolean, shiftKey: boolean) => void;
+  disabled?: boolean;
 }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -371,14 +619,16 @@ const TreeNodeComponent = ({
   const isSelected = selectedNodeIds.includes(node.id);
 
   const handleNodeClick = (e: React.MouseEvent) => {
+    if (disabled) return;
     e.stopPropagation();
-    onSelectNode(node.id, e.ctrlKey, e.shiftKey);
+    onSelectNode?.(node.id, e.ctrlKey, e.shiftKey);
     if (hasChildren && !e.ctrlKey && !e.shiftKey) {
       setIsOpen(!isOpen);
     }
   };
 
   const handleEdit: MouseEventHandler<SVGSVGElement> = (e) => {
+    if (disabled) return;
     e.stopPropagation();
     setIsEditing(!isEditing);
   };
@@ -389,7 +639,7 @@ const TreeNodeComponent = ({
   };
 
   return (
-    <div className="select-none">
+    <div className={`select-none ${disabled ? "opacity-50" : ""}`}>
       <div
         className={`flex items-center rounded px-2 py-1 cursor-pointer ${
           isSelected ? "bg-blue-200" : "hover:bg-gray-100"
