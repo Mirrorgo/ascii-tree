@@ -495,6 +495,25 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 撤销
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+      // 重做
+      else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Z") {
+        // 检查 Ctrl+Shift+Z 时，e.key 会变成大写的 "Z"
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleUndo, handleRedo]); // 注意添加依赖
+
   return (
     <div className="h-screen flex flex-col">
       <div className="w-full border-b p-2">

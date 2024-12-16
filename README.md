@@ -17,16 +17,18 @@
       - shift+鼠标单击
   - 历史记录
     - 撤销 / 重做
+      - 对应的快捷键
 - markdown view
   - 增删改查
   - 快捷操作
     - alt + ↑ 交换本行与上一行的节点
     - alt + ↓ 交换本行与下一行的节点
   - format
-    <!-- - ctrl + S 格式化
-      - 只有md view有效的时候可以用，会有message提示，并从folder view 往 md view转化 -->
+    - ctrl + S 格式化
+      - 只有md view有效的时候可以用，会有message提示，并从folder view 往 md view转化
   - 历史记录
     - 撤销 / 重做
+      - 对应的快捷键
   - 
 
 
