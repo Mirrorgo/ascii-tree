@@ -442,62 +442,67 @@ function App() {
             <Github className="cursor-pointer" />
           </a>
         </div>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            onClick={addChildNode}
-            disabled={selectedNodeIds.length > 1}
-          >
-            Add Child
-          </Button>
-          <Button
-            size="sm"
-            onClick={addSiblingNode}
-            disabled={
-              selectedNodeIds.length !== 1 || selectedNodeIds.includes("root")
-            }
-          >
-            Add Sibling
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={deleteNode}
-            disabled={
-              selectedNodeIds.length === 0 || selectedNodeIds.includes("root")
-            }
-          >
-            Delete
-          </Button>
-          <Button
-            variant="link"
-            onClick={handleUndo}
-            disabled={historyIndex <= 0}
-          >
-            undo
-          </Button>
-          <Button
-            variant="link"
-            onClick={handleRedo}
-            disabled={historyIndex >= history.length - 1}
-          >
-            redo
-          </Button>
-          <Menubar>
-            <MenubarMenu>
-              <MenubarTrigger>Setting</MenubarTrigger>
-              <MenubarContent>
-                <MenubarCheckboxItem checked>
-                  New Tab <MenubarShortcut>⌘T</MenubarShortcut>
-                </MenubarCheckboxItem>
-                <MenubarCheckboxItem>New Window</MenubarCheckboxItem>
-                <MenubarSeparator />
-                <MenubarCheckboxItem>Share</MenubarCheckboxItem>
-                <MenubarSeparator />
-                <MenubarCheckboxItem>Print</MenubarCheckboxItem>
-              </MenubarContent>
-            </MenubarMenu>
-          </Menubar>
+        <div className="flex justify-between">
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={addChildNode}
+              disabled={selectedNodeIds.length > 1}
+            >
+              Add Child
+            </Button>
+            <Button
+              size="sm"
+              onClick={addSiblingNode}
+              disabled={
+                selectedNodeIds.length !== 1 || selectedNodeIds.includes("root")
+              }
+            >
+              Add Sibling
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={deleteNode}
+              disabled={
+                selectedNodeIds.length === 0 || selectedNodeIds.includes("root")
+              }
+            >
+              Delete
+            </Button>
+          </div>
+          {/* global bar */}
+          <div className="flex gap-2">
+            <Button
+              variant="link"
+              onClick={handleUndo}
+              disabled={historyIndex <= 0}
+            >
+              undo
+            </Button>
+            <Button
+              variant="link"
+              onClick={handleRedo}
+              disabled={historyIndex >= history.length - 1}
+            >
+              redo
+            </Button>
+            <Menubar>
+              <MenubarMenu>
+                <MenubarTrigger>Setting</MenubarTrigger>
+                <MenubarContent>
+                  <MenubarCheckboxItem checked>
+                    New Tab <MenubarShortcut>⌘T</MenubarShortcut>
+                  </MenubarCheckboxItem>
+                  <MenubarCheckboxItem>New Window</MenubarCheckboxItem>
+                  <MenubarSeparator />
+                  <MenubarCheckboxItem>Share</MenubarCheckboxItem>
+                  <MenubarSeparator />
+                  <MenubarCheckboxItem>Print</MenubarCheckboxItem>
+                </MenubarContent>
+              </MenubarMenu>
+            </Menubar>
+          </div>
         </div>
       </div>
       <div className="flex flex-1 gap-2">
