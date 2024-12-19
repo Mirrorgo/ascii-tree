@@ -1,41 +1,36 @@
-import {
-  FocusEvent,
-  MouseEventHandler,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle,
+  Check,
   ChevronDown,
   ChevronRight,
-  FileText,
-  Folder,
+  Clipboard,
+  Copy,
   Github,
-  SquarePen,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import TextEditor from "./components/mg/text-editor";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "./components/ui/accordion";
-
-type TreeNode = {
-  id: string;
-  name: string;
-  children?: TreeNode[];
-};
-
-interface TreeState {
-  tree: TreeNode;
-  selectedNodeIds: string[];
-  lastSelectedId: string | null;
-}
+  Menubar,
+  MenubarCheckboxItem,
+  MenubarContent,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarShortcut,
+  MenubarTrigger,
+} from "./components/ui/menubar";
+import { generateId, initialTree, TreeNode, TreeState } from "./helper/global";
+import { getNodesBetween } from "./helper/folder";
+import { generateAscii } from "./helper/ascii-tree";
+import TreeNodeComponent from "./components/mg/tree-node";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "./components/ui/resizable";
+import { useToast } from "./hooks/use-toast";
+import { ImperativePanelHandle } from "react-resizable-panels";
 
 interface TextState {
   content: string;
@@ -47,73 +42,6 @@ interface HistoryEntry {
   tree: TreeState;
   text: TextState;
 }
-
-function generateId() {
-  return Math.random().toString(36).substring(2, 9);
-}
-
-// 添加一个辅助函数来获取树中的所有节点ID
-function getAllNodeIds(node: TreeNode): string[] {
-  const ids = [node.id];
-  if (node.children) {
-    node.children.forEach((child) => {
-      ids.push(...getAllNodeIds(child));
-    });
-  }
-  return ids;
-}
-
-// 添加一个函数来获取两个节点之间的所有节点
-function getNodesBetween(
-  tree: TreeNode,
-  startId: string,
-  endId: string
-): string[] {
-  const allIds = getAllNodeIds(tree);
-  const startIndex = allIds.indexOf(startId);
-  const endIndex = allIds.indexOf(endId);
-
-  if (startIndex === -1 || endIndex === -1) return [];
-
-  const start = Math.min(startIndex, endIndex);
-  const end = Math.max(startIndex, endIndex);
-
-  return allIds.slice(start, end + 1);
-}
-const initialTree: TreeNode = {
-  id: "root",
-  name: "root",
-  children: [
-    {
-      id: "1",
-      name: "folder1",
-      children: [
-        {
-          id: "2",
-          name: "file1",
-        },
-        {
-          id: "3",
-          name: "file2",
-        },
-      ],
-    },
-    {
-      id: "4",
-      name: "folder2",
-      children: [
-        {
-          id: "5",
-          name: "file3",
-        },
-        {
-          id: "6",
-          name: "file4",
-        },
-      ],
-    },
-  ],
-};
 
 // 新增的转换函数
 function treeToMarkdown(node: TreeNode, level = 0): string {
@@ -191,6 +119,10 @@ function App() {
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
 
   const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+
+  // const { toast } = useToast();
+
+  const [copied, setCopied] = useState(false);
 
   // 文本状态
   const [textState, setTextState] = useState<TextState>({
@@ -446,37 +378,6 @@ function App() {
     );
   };
 
-  const generateAscii = (
-    node: TreeNode,
-    prefix = "",
-    isLast = true,
-    isRoot = true
-  ): string => {
-    let result = "";
-
-    if (isRoot) {
-      result = node.name + "\n";
-      prefix = "";
-    } else {
-      result = prefix + (isLast ? "└── " : "├── ") + node.name + "\n";
-    }
-
-    if (node.children && node.children.length > 0) {
-      node.children.forEach((child, index) => {
-        let newPrefix;
-        if (isRoot) {
-          newPrefix = prefix;
-        } else {
-          newPrefix = prefix + (isLast ? "    " : "│   ");
-        }
-        const isLastChild = index === node.children!.length - 1;
-        result += generateAscii(child, newPrefix, isLastChild, false);
-      });
-    }
-
-    return result;
-  };
-
   const handleNodeSelection = (
     id: string,
     ctrlKey: boolean,
@@ -520,6 +421,14 @@ function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleUndo, handleRedo]); // 注意添加依赖
 
+  // const [selectedViews, setSelectedViews] = useState({
+  //   "ascii-tree": false,
+  //   folder: false,
+  //   markdown: false,
+  // });
+  const asciiTreeRef = useRef<ImperativePanelHandle>(null);
+  const [isAsciiTreeCollapse, setIsAsciiTreeCollapse] = useState(false);
+
   return (
     <div className="h-screen flex flex-col">
       <div className="w-full border-b p-2">
@@ -534,15 +443,6 @@ function App() {
             </div>
             <Github className="cursor-pointer" />
           </a>
-          <Button
-            className="ml-auto"
-            onClick={() => {
-              const ascii = generateAscii(fileTree);
-              navigator.clipboard.writeText(ascii);
-            }}
-          >
-            copy
-          </Button>
         </div>
         <div className="flex gap-2">
           <Button
@@ -585,33 +485,80 @@ function App() {
           >
             redo
           </Button>
+          <Menubar>
+            <MenubarMenu>
+              <MenubarTrigger>Setting</MenubarTrigger>
+              <MenubarContent>
+                <MenubarCheckboxItem checked>
+                  New Tab <MenubarShortcut>⌘T</MenubarShortcut>
+                </MenubarCheckboxItem>
+                <MenubarCheckboxItem>New Window</MenubarCheckboxItem>
+                <MenubarSeparator />
+                <MenubarCheckboxItem>Share</MenubarCheckboxItem>
+                <MenubarSeparator />
+                <MenubarCheckboxItem>Print</MenubarCheckboxItem>
+              </MenubarContent>
+            </MenubarMenu>
+          </Menubar>
         </div>
       </div>
       <div className="flex flex-1 gap-2">
         <div className="w-64 border-r p-2">
-          <TreeNodeComponent
-            node={fileTree}
-            onUpdate={updateNode}
-            selectedNodeIds={selectedNodeIds}
-            onSelectNode={(id, ctrlKey, shiftKey) =>
-              handleNodeSelection(id, ctrlKey, shiftKey)
-            }
-            disabled={isTreeLocked}
-          />
+          <ResizablePanelGroup direction="vertical">
+            <ResizablePanel>
+              <TreeNodeComponent
+                node={fileTree}
+                onUpdate={updateNode}
+                selectedNodeIds={selectedNodeIds}
+                onSelectNode={(id, ctrlKey, shiftKey) =>
+                  handleNodeSelection(id, ctrlKey, shiftKey)
+                }
+                disabled={isTreeLocked}
+              />
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel
+              ref={asciiTreeRef}
+              minSize={30}
+              collapsible
+              collapsedSize={9}
+              onCollapse={() => setIsAsciiTreeCollapse(true)}
+              onExpand={() => setIsAsciiTreeCollapse(false)}
+            >
+              <div
+                className="mt-2 flex justify-between items-center cursor-pointer"
+                onClick={() => {
+                  if (isAsciiTreeCollapse) asciiTreeRef.current?.expand();
+                  else asciiTreeRef.current?.collapse();
+                  setIsAsciiTreeCollapse(!isAsciiTreeCollapse);
+                }}
+              >
+                {isAsciiTreeCollapse ? <ChevronRight /> : <ChevronDown />}
+                <div className="font-bold uppercase">ascii tree</div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={(e) => {
+                    setCopied(true);
+                    setTimeout(() => {
+                      setCopied(false);
+                    }, 600);
+                    const ascii = generateAscii(fileTree);
+                    navigator.clipboard.writeText(ascii);
+                    e.stopPropagation();
+                  }}
+                >
+                  {copied ? <Check /> : <Clipboard />}
+                </Button>
+              </div>
+              <div className="flex-1 px-2 py-1 font-mono whitespace-pre">
+                {generateAscii(fileTree)}
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </div>
         <div>
           <div>
-            <Accordion type="multiple">
-              <AccordionItem value="ascii-tree">
-                <AccordionTrigger>ascii-tree</AccordionTrigger>
-                <AccordionContent>
-                  <div className="flex-1 p-2 font-mono whitespace-pre">
-                    {generateAscii(fileTree)}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
             <TextEditor
               initialValue={textState.content}
               onChange={handleEditorChange}
@@ -630,104 +577,5 @@ function App() {
     </div>
   );
 }
-
-const TreeNodeComponent = ({
-  node,
-  level = 0,
-  onUpdate,
-  selectedNodeIds,
-  onSelectNode,
-  disabled,
-}: {
-  node: TreeNode;
-  level?: number;
-  onUpdate: (id: string, newName: string) => void;
-  selectedNodeIds: string[];
-  onSelectNode: (id: string, ctrlKey: boolean, shiftKey: boolean) => void;
-  disabled?: boolean;
-}) => {
-  const [isOpen, setIsOpen] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const hasChildren = node.children && node.children.length > 0;
-  const isSelected = selectedNodeIds.includes(node.id);
-
-  const handleNodeClick = (e: React.MouseEvent) => {
-    if (disabled) return;
-    e.stopPropagation();
-    onSelectNode?.(node.id, e.ctrlKey, e.shiftKey);
-    if (hasChildren && !e.ctrlKey && !e.shiftKey) {
-      setIsOpen(!isOpen);
-    }
-  };
-
-  const handleEdit: MouseEventHandler<SVGSVGElement> = (e) => {
-    if (disabled) return;
-    e.stopPropagation();
-    setIsEditing(!isEditing);
-  };
-
-  const saveEdit = (e: FocusEvent<HTMLInputElement>) => {
-    onUpdate(node.id, e.target.value);
-    setIsEditing(false);
-  };
-
-  return (
-    <div className={`select-none ${disabled ? "opacity-50" : ""}`}>
-      <div
-        className={`flex items-center rounded px-2 py-1 cursor-pointer ${
-          isSelected ? "bg-blue-200" : "hover:bg-gray-100"
-        }`}
-        style={{ paddingLeft: `${level * 16}px` }}
-        onClick={handleNodeClick}
-      >
-        {hasChildren ? (
-          <>
-            {isOpen ? (
-              <ChevronDown className="w-4 h-4 mr-1" />
-            ) : (
-              <ChevronRight className="w-4 h-4 mr-1" />
-            )}
-            <Folder className="w-4 h-4 mr-2 text-blue-500" />
-          </>
-        ) : (
-          <>
-            <span className="w-4 mr-1" />
-            <FileText className="w-4 h-4 mr-2 text-gray-500" />
-          </>
-        )}
-        {isEditing ? (
-          <Input
-            className="h-6 mx-0 max-w-32"
-            autoFocus
-            onClick={(e) => e.stopPropagation()}
-            onBlur={saveEdit}
-            defaultValue={node.name}
-          />
-        ) : (
-          <span>{node.name}</span>
-        )}
-        <SquarePen
-          onClick={handleEdit}
-          className="w-4 h-4 ml-auto text-gray-500 hover:text-blue-500"
-        />
-      </div>
-
-      {hasChildren && isOpen && (
-        <div>
-          {node.children!.map((child) => (
-            <TreeNodeComponent
-              key={child.id}
-              node={child}
-              level={level + 1}
-              onUpdate={onUpdate}
-              selectedNodeIds={selectedNodeIds}
-              onSelectNode={onSelectNode}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
 
 export default App;
