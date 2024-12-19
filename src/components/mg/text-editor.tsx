@@ -165,16 +165,14 @@ const TextEditor: FC<EditorProps> = ({
   }, []);
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4">
-      <textarea
-        ref={textareaRef}
-        value={content}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        className={`w-full h-64 p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-base ${className}`}
-        placeholder={placeholder}
-      />
-    </div>
+    <textarea
+      ref={textareaRef}
+      value={content}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown}
+      className={`p-4 resize-none rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-base ${className}`}
+      placeholder={placeholder}
+    />
   );
 };
 

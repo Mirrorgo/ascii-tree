@@ -555,13 +555,13 @@ function App() {
             </ResizablePanel>
           </ResizablePanelGroup>
         </div>
-        <div>
-          <div>
-            <TextEditor
-              initialValue={textState.content}
-              onChange={handleEditorChange}
-              className="w-72"
-            />
+        <div className="flex-1 flex flex-col h-full mr-1">
+          <TextEditor
+            initialValue={textState.content}
+            onChange={handleEditorChange}
+            className="w-full flex-1 "
+          />
+          <div className="h-20">
             {!textState.isValid && (
               <Alert variant="destructive" className="mt-2">
                 <AlertTriangle className="h-4 w-4" />

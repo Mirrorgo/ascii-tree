@@ -29,7 +29,9 @@
   - 历史记录
     - 撤销 / 重做
       - 对应的快捷键
-  - 
+- ascii-tree view
+  - resizable
+  - collapsible
 
 
 ## 注意
