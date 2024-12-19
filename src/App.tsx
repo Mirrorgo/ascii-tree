@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronRight,
   Clipboard,
-  Copy,
   Github,
 } from "lucide-react";
 import TextEditor from "./components/mg/text-editor";
@@ -29,7 +28,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "./components/ui/resizable";
-import { useToast } from "./hooks/use-toast";
 import { ImperativePanelHandle } from "react-resizable-panels";
 
 interface TextState {
