@@ -463,6 +463,7 @@ function App() {
   const { defaultSize, maxSize, minSize } = useResponsivePanel();
 
   function handleFormatMarkdownList() {
+    if (!textState.isValid) return;
     const newText = treeToMarkdown(fileTree);
     addToHistory(
       { tree: fileTree, selectedNodeIds, lastSelectedId },
