@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Clipboard,
   Github,
+  Redo2,
   Settings,
   Trash2,
   Undo2,
@@ -459,7 +460,7 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col">
-      <div className="w-full border-b p-2">
+      <div className="w-full border-b px-2 mt-2 mb-2">
         <div className="flex justify-between items-center">
           <a
             className="flex items-center"
@@ -514,29 +515,31 @@ function App() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="flex justify-between">
+        <div className="flex">
           {/* global bar */}
-          <div className="flex gap-2">
+          <div className="flex">
             <Button
               variant="link"
+              size="icon"
               onClick={handleUndo}
               disabled={historyIndex <= 0}
             >
-              undo
+              <Undo2 />
             </Button>
             <Button
+              size="icon"
               variant="link"
               onClick={handleRedo}
               disabled={historyIndex >= history.length - 1}
             >
-              redo
+              <Redo2 />
             </Button>
           </div>
         </div>
       </div>
       {/* main */}
 
-      <ResizablePanelGroup direction="horizontal">
+      <ResizablePanelGroup direction="horizontal" className="">
         <ResizablePanel
           defaultSize={defaultSize}
           maxSize={maxSize}
@@ -545,8 +548,9 @@ function App() {
           <ResizablePanelGroup direction="vertical">
             {showExplorerPanel && (
               <>
-                <ResizablePanel>
-                  <div className="flex gap-2">
+                {/* 不加order会产生bug：from 库 readme */}
+                <ResizablePanel id="explorer" order={1}>
+                  <div className="flex gap-2 justify-center">
                     <Button
                       size="sm"
                       onClick={addChildNode}
@@ -592,6 +596,8 @@ function App() {
             )}
             <ResizablePanel
               ref={asciiTreeRef}
+              order={2}
+              id="ascii-tree"
               minSize={30}
               collapsible
               collapsedSize={9}
