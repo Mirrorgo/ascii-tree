@@ -1,4 +1,5 @@
-import { generateId, TreeNode } from "./global";
+import { TreeNode } from "@/typings";
+import { generateId } from "./global";
 
 const generateAscii = (
   node: TreeNode,

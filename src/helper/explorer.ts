@@ -1,4 +1,4 @@
-import { TreeNode } from "./global";
+import { TreeNode } from "@/typings";
 
 // 添加一个辅助函数来获取树中的所有节点ID
 function getAllNodeIds(node: TreeNode): string[] {

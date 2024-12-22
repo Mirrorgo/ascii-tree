@@ -1,14 +1,4 @@
-type TreeNode = {
-  id: string;
-  name: string;
-  children?: TreeNode[];
-};
-
-interface TreeState {
-  tree: TreeNode;
-  selectedNodeIds: string[];
-  lastSelectedId: string | null;
-}
+import { TreeNode } from "@/typings";
 
 function generateId() {
   return Math.random().toString(36).substring(2, 9);
@@ -83,4 +73,3 @@ function markdownToTree(text: string): {
 }
 
 export { generateId, treeToMarkdown, markdownToTree };
-export type { TreeNode, TreeState };

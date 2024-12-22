@@ -15,13 +15,7 @@ import {
 } from "lucide-react";
 import TextEditor, { TextEditorRef } from "./components/mg/text-editor";
 import { Alert, AlertTitle } from "./components/ui/alert";
-import {
-  generateId,
-  markdownToTree,
-  TreeNode,
-  TreeState,
-  treeToMarkdown,
-} from "./helper/global";
+import { generateId, markdownToTree, treeToMarkdown } from "./helper/global";
 import { getNodesBetween } from "./helper/explorer";
 import {
   generateAscii,
@@ -57,24 +51,25 @@ import {
 } from "./components/ui/dialog";
 import { Textarea } from "./components/ui/textarea";
 import { ASCII_TREE_TEMPLATE, INITIAL_TREE } from "./helper/constants";
-
-interface TextState {
-  content: string;
-  isValid: boolean;
-  error?: string;
-}
-
-interface HistoryEntry {
-  tree: TreeState;
-  text: TextState;
-}
+import { TextState, TreeNode } from "./typings";
+import { useTreeHistory } from "./hooks/use-tree-history";
 
 function App() {
-  const [fileTree, setFileTree] = useState<TreeNode>(INITIAL_TREE);
-
-  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
-
-  const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+  const {
+    fileTree,
+    setFileTree,
+    selectedNodeIds,
+    setSelectedNodeIds,
+    lastSelectedId,
+    setLastSelectedId,
+    isTreeLocked,
+    setIsTreeLocked,
+    addToHistory,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = useTreeHistory();
 
   // const { toast } = useToast();
 
@@ -86,42 +81,6 @@ function App() {
     isValid: true,
   });
 
-  // 历史记录状态
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const [isTreeLocked, setIsTreeLocked] = useState(false);
-
-  // 初始化历史记录
-  useEffect(() => {
-    if (history.length === 0) {
-      const initialEntry: HistoryEntry = {
-        tree: {
-          tree: fileTree,
-          selectedNodeIds,
-          lastSelectedId,
-        },
-        text: {
-          content: treeToMarkdown(fileTree),
-          isValid: true,
-        },
-      };
-      setHistory([initialEntry]);
-      setHistoryIndex(0);
-    }
-  }, []);
-
-  // 添加新的历史记录
-  const addToHistory = useCallback(
-    (treeState: TreeState, textState: TextState) => {
-      const newHistory = history.slice(0, historyIndex + 1);
-      newHistory.push({ tree: treeState, text: textState });
-      setHistory(newHistory);
-      setHistoryIndex(newHistory.length - 1);
-    },
-    [history, historyIndex]
-  );
-
-  // 更新文本编辑器变更处理
   const handleEditorChange = (value: string) => {
     setTextState({
       content: value,
@@ -148,30 +107,19 @@ function App() {
     }
   };
 
-  // 添加撤销/重做功能
-  const handleUndo = () => {
-    if (historyIndex > 0) {
-      const prevState = history[historyIndex - 1];
-      setFileTree(prevState.tree.tree);
-      setSelectedNodeIds(prevState.tree.selectedNodeIds);
-      setLastSelectedId(prevState.tree.lastSelectedId);
-      setTextState(prevState.text);
-      setHistoryIndex((prev) => prev - 1);
-      setIsTreeLocked(false);
+  const handleUndo = useCallback(() => {
+    const prevTextState = undo();
+    if (prevTextState) {
+      setTextState(prevTextState);
     }
-  };
+  }, [undo]);
 
-  const handleRedo = () => {
-    if (historyIndex < history.length - 1) {
-      const nextState = history[historyIndex + 1];
-      setFileTree(nextState.tree.tree);
-      setSelectedNodeIds(nextState.tree.selectedNodeIds);
-      setLastSelectedId(nextState.tree.lastSelectedId);
-      setTextState(nextState.text);
-      setHistoryIndex((prev) => prev + 1);
-      setIsTreeLocked(false);
+  const handleRedo = useCallback(() => {
+    const nextTextState = redo();
+    if (nextTextState) {
+      setTextState(nextTextState);
     }
-  };
+  }, [redo]);
 
   const addChildNode = () => {
     if (selectedNodeIds.length > 1) return;
@@ -289,9 +237,8 @@ function App() {
 
     const newTree = removeNodes(fileTree);
     setFileTree(newTree);
-    setSelectedNodeIds([]); // 删除后清除选中状态
+    setSelectedNodeIds([]);
 
-    // 添加这些代码
     const newText = treeToMarkdown(newTree);
     setTextState({
       content: newText,
@@ -321,7 +268,6 @@ function App() {
     const newTree = updateTreeNode(fileTree);
     setFileTree(newTree);
 
-    // 添加这些代码
     const newText = treeToMarkdown(newTree);
     setTextState({
       content: newText,
@@ -557,7 +503,7 @@ function App() {
               variant="link"
               size="icon"
               onClick={handleUndo}
-              disabled={historyIndex <= 0}
+              disabled={!canUndo}
             >
               <Undo2 />
             </Button>
@@ -565,7 +511,7 @@ function App() {
               size="icon"
               variant="link"
               onClick={handleRedo}
-              disabled={historyIndex >= history.length - 1}
+              disabled={!canRedo}
             >
               <Redo2 />
             </Button>

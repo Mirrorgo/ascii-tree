@@ -1,4 +1,3 @@
-import { TreeNode } from "@/helper/global";
 import {
   ChevronDown,
   ChevronRight,
@@ -8,6 +7,7 @@ import {
 } from "lucide-react";
 import { FocusEvent, MouseEventHandler, useState } from "react";
 import { Input } from "../ui/input";
+import { TreeNode } from "@/typings";
 
 const TreeNodeComponent = ({
   node,
