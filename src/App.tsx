@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Clipboard,
   Github,
+  Trash2,
 } from "lucide-react";
 import TextEditor from "./components/mg/text-editor";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
@@ -29,6 +30,7 @@ import {
   ResizablePanelGroup,
 } from "./components/ui/resizable";
 import { ImperativePanelHandle } from "react-resizable-panels";
+import { useResponsivePanel } from "./hooks/use-responsive-panel";
 
 interface TextState {
   content: string;
@@ -427,6 +429,8 @@ function App() {
   const asciiTreeRef = useRef<ImperativePanelHandle>(null);
   const [isAsciiTreeCollapse, setIsAsciiTreeCollapse] = useState(false);
 
+  const { defaultSize, maxSize, minSize } = useResponsivePanel();
+
   return (
     <div className="h-screen flex flex-col">
       <div className="w-full border-b p-2">
@@ -443,34 +447,6 @@ function App() {
           </a>
         </div>
         <div className="flex justify-between">
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              onClick={addChildNode}
-              disabled={selectedNodeIds.length > 1}
-            >
-              Add Child
-            </Button>
-            <Button
-              size="sm"
-              onClick={addSiblingNode}
-              disabled={
-                selectedNodeIds.length !== 1 || selectedNodeIds.includes("root")
-              }
-            >
-              Add Sibling
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={deleteNode}
-              disabled={
-                selectedNodeIds.length === 0 || selectedNodeIds.includes("root")
-              }
-            >
-              Delete
-            </Button>
-          </div>
           {/* global bar */}
           <div className="flex gap-2">
             <Button
@@ -505,10 +481,47 @@ function App() {
           </div>
         </div>
       </div>
-      <div className="flex flex-1 gap-2">
-        <div className="w-64 border-r p-2">
+      {/* main */}
+
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel
+          defaultSize={defaultSize}
+          maxSize={maxSize}
+          minSize={minSize}
+        >
           <ResizablePanelGroup direction="vertical">
             <ResizablePanel>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={addChildNode}
+                  disabled={selectedNodeIds.length > 1}
+                >
+                  Add Child
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={addSiblingNode}
+                  disabled={
+                    selectedNodeIds.length !== 1 ||
+                    selectedNodeIds.includes("root")
+                  }
+                >
+                  Add Sibling
+                </Button>
+                <Button
+                  size="icon"
+                  className="w-8 h-8" // icon 本来是9，调小一点
+                  variant="destructive"
+                  onClick={deleteNode}
+                  disabled={
+                    selectedNodeIds.length === 0 ||
+                    selectedNodeIds.includes("root")
+                  }
+                >
+                  <Trash2 />
+                </Button>
+              </div>
               <TreeNodeComponent
                 node={fileTree}
                 onUpdate={updateNode}
@@ -519,7 +532,7 @@ function App() {
                 disabled={isTreeLocked}
               />
             </ResizablePanel>
-            <ResizableHandle />
+            <ResizableHandle withHandle />
             <ResizablePanel
               ref={asciiTreeRef}
               minSize={30}
@@ -559,24 +572,27 @@ function App() {
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>
-        </div>
-        <div className="flex-1 flex flex-col h-full mr-1">
-          <TextEditor
-            initialValue={textState.content}
-            onChange={handleEditorChange}
-            className="w-full flex-1 "
-          />
-          <div className="h-20">
-            {!textState.isValid && (
-              <Alert variant="destructive" className="mt-2">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Parse Error</AlertTitle>
-                <AlertDescription>{textState.error}</AlertDescription>
-              </Alert>
-            )}
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel>
+          <div className="flex-1 flex flex-col h-full m-1">
+            <TextEditor
+              initialValue={textState.content}
+              onChange={handleEditorChange}
+              className="w-full flex-1 "
+            />
+            <div className="h-20">
+              {!textState.isValid && (
+                <Alert variant="destructive" className="mt-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Parse Error</AlertTitle>
+                  <AlertDescription>{textState.error}</AlertDescription>
+                </Alert>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }
