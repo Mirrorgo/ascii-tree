@@ -1,4 +1,4 @@
-import { TreeNode } from "./global";
+import { TreeNode } from "@/typings";
 
 const ASCII_TREE_TEMPLATE = `root
 ├── folder1
