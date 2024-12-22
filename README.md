@@ -1,6 +1,6 @@
 # ASCII folder structure diagrams
 ## 当前已有功能
-- folder view
+- explorer view
   - 基础交互
     - 增
       - add child
@@ -18,14 +18,16 @@
   - 历史记录
     - 撤销 / 重做
       - 对应的快捷键
-- markdown view
+- markdown list view
   - 增删改查
   - 快捷操作
     - alt + ↑ 交换本行与上一行的节点
     - alt + ↓ 交换本行与下一行的节点
   - format
     - ctrl + S 格式化
-      - 只有md view有效的时候可以用，会有message提示，并从folder view 往 md view转化
+      - 只有md view有效的时候可以用，并从explorer view 往 md view转化
+      - 会有message提示
+        - todo
   - 历史记录
     - 撤销 / 重做
       - 对应的快捷键
