@@ -9,9 +9,10 @@ import {
   Github,
   Settings,
   Trash2,
+  Undo2,
 } from "lucide-react";
-import TextEditor from "./components/mg/text-editor";
-import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
+import TextEditor, { TextEditorRef } from "./components/mg/text-editor";
+import { Alert, AlertTitle } from "./components/ui/alert";
 import { generateId, initialTree, TreeNode, TreeState } from "./helper/global";
 import { getNodesBetween } from "./helper/folder";
 import { generateAscii } from "./helper/ascii-tree";
@@ -434,7 +435,6 @@ function App() {
   const { defaultSize, maxSize, minSize } = useResponsivePanel();
 
   function handleFormatMarkdownList() {
-    if (!textState.isValid) return;
     const newText = treeToMarkdown(fileTree);
     addToHistory(
       { tree: fileTree, selectedNodeIds, lastSelectedId },
@@ -449,6 +449,13 @@ function App() {
   const [showResizeHandle, setShowResizeHandle] = useState(true);
 
   const [showExplorerPanel, setShowExplorerPanel] = useState(true);
+
+  const editorRef = useRef<TextEditorRef>(null);
+
+  const handleJumpToLine = useCallback((lineNumber: number) => {
+    // 这个方法需要通过 props 传给 TextEditor
+    editorRef.current?.jumpToLine(lineNumber);
+  }, []);
 
   return (
     <div className="h-screen flex flex-col">
@@ -633,16 +640,53 @@ function App() {
         <ResizablePanel>
           <div className="flex-1 flex flex-col h-full m-1">
             <TextEditor
+              ref={editorRef}
               initialValue={textState.content}
               onChange={handleEditorChange}
               className="w-full flex-1 "
             />
             <div className="h-20">
               {!textState.isValid && (
-                <Alert variant="destructive" className="mt-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Parse Error</AlertTitle>
-                  <AlertDescription>{textState.error}</AlertDescription>
+                <Alert
+                  variant="destructive"
+                  className="mt-2 flex justify-between items-center"
+                >
+                  <div className="flex gap-3 items-center">
+                    <AlertTriangle className="h-5 w-5 mb-1" />
+                    <div>
+                      <AlertTitle>Parse Error</AlertTitle>
+                      <div>
+                        {textState.error
+                          ?.split(/line (\d+)/)
+                          .map((part, index) => {
+                            if (index % 2 === 1) {
+                              // 这是行号
+                              return (
+                                <Button
+                                  key={index}
+                                  variant="link"
+                                  size="sm"
+                                  className="px-1 h-auto text-destructive text-sm underline"
+                                  onClick={() =>
+                                    handleJumpToLine(parseInt(part))
+                                  }
+                                >
+                                  {`line ${part}`}
+                                </Button>
+                              );
+                            }
+                            return part;
+                          })}
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant={"destructive"}
+                    size="icon"
+                    onClick={handleUndo}
+                  >
+                    <Undo2 />
+                  </Button>
                 </Alert>
               )}
             </div>
