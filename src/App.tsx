@@ -7,19 +7,11 @@ import {
   ChevronRight,
   Clipboard,
   Github,
+  Settings,
   Trash2,
 } from "lucide-react";
 import TextEditor from "./components/mg/text-editor";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
-import {
-  Menubar,
-  MenubarCheckboxItem,
-  MenubarContent,
-  MenubarMenu,
-  MenubarSeparator,
-  MenubarShortcut,
-  MenubarTrigger,
-} from "./components/ui/menubar";
 import { generateId, initialTree, TreeNode, TreeState } from "./helper/global";
 import { getNodesBetween } from "./helper/folder";
 import { generateAscii } from "./helper/ascii-tree";
@@ -31,6 +23,16 @@ import {
 } from "./components/ui/resizable";
 import { ImperativePanelHandle } from "react-resizable-panels";
 import { useResponsivePanel } from "./hooks/use-responsive-panel";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "./components/ui/dropdown-menu";
 
 interface TextState {
   content: string;
@@ -415,21 +417,38 @@ function App() {
         e.preventDefault();
         handleRedo();
       }
+      // 格式化 Markdown
+      else if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        handleFormatMarkdownList();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleUndo, handleRedo]); // 注意添加依赖
+  }, [handleUndo, handleRedo, handleFormatMarkdownList]); // 注意添加依赖
 
-  // const [selectedViews, setSelectedViews] = useState({
-  //   "ascii-tree": false,
-  //   folder: false,
-  //   markdown: false,
-  // });
   const asciiTreeRef = useRef<ImperativePanelHandle>(null);
   const [isAsciiTreeCollapse, setIsAsciiTreeCollapse] = useState(false);
 
   const { defaultSize, maxSize, minSize } = useResponsivePanel();
+
+  function handleFormatMarkdownList() {
+    if (!textState.isValid) return;
+    const newText = treeToMarkdown(fileTree);
+    addToHistory(
+      { tree: fileTree, selectedNodeIds, lastSelectedId },
+      { content: newText, isValid: true }
+    );
+    setTextState({
+      content: newText,
+      isValid: true,
+    });
+  }
+
+  const [showResizeHandle, setShowResizeHandle] = useState(true);
+
+  const [showExplorerPanel, setShowExplorerPanel] = useState(true);
 
   return (
     <div className="h-screen flex flex-col">
@@ -445,6 +464,48 @@ function App() {
             </div>
             <Github className="cursor-pointer" />
           </a>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon">
+                <Settings />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>View</DropdownMenuLabel>
+              <DropdownMenuCheckboxItem
+                className="cursor-pointer"
+                checked={showExplorerPanel}
+                onCheckedChange={(checked) => {
+                  setShowExplorerPanel(checked);
+                  if (!checked) {
+                    setIsAsciiTreeCollapse(false);
+                  }
+                }}
+              >
+                Show Explorer Panel
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                className="cursor-pointer"
+                checked={showResizeHandle}
+                onClick={() => setShowResizeHandle(!showResizeHandle)}
+              >
+                Show Resize Handles
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                disabled={!textState.isValid}
+                onClick={handleFormatMarkdownList}
+              >
+                {/* <DropdownMenuShortcut>⇧⌥F</DropdownMenuShortcut> */}
+                <div className="flex items-baseline gap-2">
+                  <div>Format Markdown List</div>
+                  <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <div className="flex justify-between">
           {/* global bar */}
@@ -463,21 +524,6 @@ function App() {
             >
               redo
             </Button>
-            <Menubar>
-              <MenubarMenu>
-                <MenubarTrigger>Setting</MenubarTrigger>
-                <MenubarContent>
-                  <MenubarCheckboxItem checked>
-                    New Tab <MenubarShortcut>⌘T</MenubarShortcut>
-                  </MenubarCheckboxItem>
-                  <MenubarCheckboxItem>New Window</MenubarCheckboxItem>
-                  <MenubarSeparator />
-                  <MenubarCheckboxItem>Share</MenubarCheckboxItem>
-                  <MenubarSeparator />
-                  <MenubarCheckboxItem>Print</MenubarCheckboxItem>
-                </MenubarContent>
-              </MenubarMenu>
-            </Menubar>
           </div>
         </div>
       </div>
@@ -490,49 +536,53 @@ function App() {
           minSize={minSize}
         >
           <ResizablePanelGroup direction="vertical">
-            <ResizablePanel>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={addChildNode}
-                  disabled={selectedNodeIds.length > 1}
-                >
-                  Add Child
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={addSiblingNode}
-                  disabled={
-                    selectedNodeIds.length !== 1 ||
-                    selectedNodeIds.includes("root")
-                  }
-                >
-                  Add Sibling
-                </Button>
-                <Button
-                  size="icon"
-                  className="w-8 h-8" // icon 本来是9，调小一点
-                  variant="destructive"
-                  onClick={deleteNode}
-                  disabled={
-                    selectedNodeIds.length === 0 ||
-                    selectedNodeIds.includes("root")
-                  }
-                >
-                  <Trash2 />
-                </Button>
-              </div>
-              <TreeNodeComponent
-                node={fileTree}
-                onUpdate={updateNode}
-                selectedNodeIds={selectedNodeIds}
-                onSelectNode={(id, ctrlKey, shiftKey) =>
-                  handleNodeSelection(id, ctrlKey, shiftKey)
-                }
-                disabled={isTreeLocked}
-              />
-            </ResizablePanel>
-            <ResizableHandle withHandle />
+            {showExplorerPanel && (
+              <>
+                <ResizablePanel>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={addChildNode}
+                      disabled={selectedNodeIds.length > 1}
+                    >
+                      Add Child
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={addSiblingNode}
+                      disabled={
+                        selectedNodeIds.length !== 1 ||
+                        selectedNodeIds.includes("root")
+                      }
+                    >
+                      Add Sibling
+                    </Button>
+                    <Button
+                      size="icon"
+                      className="w-8 h-8" // icon 本来是9，调小一点
+                      variant="destructive"
+                      onClick={deleteNode}
+                      disabled={
+                        selectedNodeIds.length === 0 ||
+                        selectedNodeIds.includes("root")
+                      }
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                  <TreeNodeComponent
+                    node={fileTree}
+                    onUpdate={updateNode}
+                    selectedNodeIds={selectedNodeIds}
+                    onSelectNode={(id, ctrlKey, shiftKey) =>
+                      handleNodeSelection(id, ctrlKey, shiftKey)
+                    }
+                    disabled={isTreeLocked}
+                  />
+                </ResizablePanel>
+                <ResizableHandle withHandle={showResizeHandle} />
+              </>
+            )}
             <ResizablePanel
               ref={asciiTreeRef}
               minSize={30}
@@ -542,14 +592,20 @@ function App() {
               onExpand={() => setIsAsciiTreeCollapse(false)}
             >
               <div
-                className="mt-2 flex justify-between items-center cursor-pointer"
+                className="mt-1 px-2 flex justify-between items-center cursor-pointer"
                 onClick={() => {
                   if (isAsciiTreeCollapse) asciiTreeRef.current?.expand();
                   else asciiTreeRef.current?.collapse();
                   setIsAsciiTreeCollapse(!isAsciiTreeCollapse);
                 }}
               >
-                {isAsciiTreeCollapse ? <ChevronRight /> : <ChevronDown />}
+                {!showExplorerPanel ? (
+                  <div className="w-6" />
+                ) : isAsciiTreeCollapse ? (
+                  <ChevronRight />
+                ) : (
+                  <ChevronDown />
+                )}
                 <div className="font-bold uppercase">ascii tree</div>
                 <Button
                   variant="outline"
@@ -573,7 +629,7 @@ function App() {
             </ResizablePanel>
           </ResizablePanelGroup>
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle={showResizeHandle} />
         <ResizablePanel>
           <div className="flex-1 flex flex-col h-full m-1">
             <TextEditor
