@@ -59,7 +59,8 @@
   - esc退出且不保存
 - up&down挑选条目
 - enter 进入编辑条目
-- folder view
+- explorer view
+  - 拖拽排序
   - alt+上下直接切换同级节点顺序，能跨母节点
   - 比如直接切换folder以及folder里面所有内容的顺序
   - 比如从 folder2的第一个节点直接切换到folder1的最后一个节点

@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import TextEditor, { TextEditorRef } from "./components/mg/text-editor";
 import { Alert, AlertTitle } from "./components/ui/alert";
-import { generateId, initialTree, TreeNode, TreeState } from "./helper/global";
+import { generateId, TreeNode, TreeState } from "./helper/global";
 import { getNodesBetween } from "./helper/explorer";
 import {
   generateAscii,
@@ -50,7 +50,7 @@ import {
   DialogTrigger,
 } from "./components/ui/dialog";
 import { Textarea } from "./components/ui/textarea";
-import { ASCII_TREE_TEMPLATE } from "./helper/constants";
+import { ASCII_TREE_TEMPLATE, INITIAL_TREE } from "./helper/constants";
 
 interface TextState {
   content: string;
@@ -134,7 +134,7 @@ function markdownToTree(text: string): {
 }
 
 function App() {
-  const [fileTree, setFileTree] = useState<TreeNode>(initialTree);
+  const [fileTree, setFileTree] = useState<TreeNode>(INITIAL_TREE);
 
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
 
@@ -146,7 +146,7 @@ function App() {
 
   // 文本状态
   const [textState, setTextState] = useState<TextState>({
-    content: treeToMarkdown(initialTree),
+    content: treeToMarkdown(INITIAL_TREE),
     isValid: true,
   });
 
@@ -422,7 +422,7 @@ function App() {
     }
   };
   const [isAsciiTreeParserDialogOpen, setIsAsciiTreeParserDialogOpen] =
-    useState(true);
+    useState(false);
 
   useEffect(() => {
     if (isAsciiTreeParserDialogOpen) {
@@ -544,6 +544,19 @@ function App() {
     }
   }
 
+  function handleReset(): void {
+    setFileTree(INITIAL_TREE);
+    const newText = treeToMarkdown(INITIAL_TREE);
+    setTextState({
+      content: newText,
+      isValid: true,
+    });
+    addToHistory(
+      { tree: INITIAL_TREE, selectedNodeIds: [], lastSelectedId: null },
+      { content: newText, isValid: true }
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col">
       <div className="w-full border-b px-2 mt-2 mb-2">
@@ -603,7 +616,7 @@ function App() {
         </div>
         <div className="flex justify-between">
           {/* global bar */}
-          <div className="flex">
+          <div className="flex items-center">
             <Button
               variant="link"
               size="icon"
@@ -619,6 +632,14 @@ function App() {
               disabled={historyIndex >= history.length - 1}
             >
               <Redo2 />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-3 font-bold"
+              onClick={handleReset}
+            >
+              Reset
             </Button>
           </div>
           <Dialog
