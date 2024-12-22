@@ -487,6 +487,7 @@ function App() {
   }, []);
 
   const asciiTreeTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [asciiParseError, setAsciiParseError] = useState<string | null>(null);
 
   function handleParseAsciiTree(): void {
     const asciiText = asciiTreeTextAreaRef.current?.value;
@@ -530,10 +531,16 @@ function App() {
 
         // Reset tree lock state
         setIsTreeLocked(false);
+
+        setAsciiParseError(null);
       } catch (error) {
+        setAsciiParseError(
+          error instanceof Error ? error.message : String(error)
+        );
         console.error("Error parsing ASCII tree:", error);
-        // You might want to show an error message to the user here
       }
+    } else {
+      setAsciiParseError("Invalid ASCII tree format. Please check your input.");
     }
   }
 
@@ -616,7 +623,12 @@ function App() {
           </div>
           <Dialog
             open={isAsciiTreeParserDialogOpen}
-            onOpenChange={setIsAsciiTreeParserDialogOpen}
+            onOpenChange={(open) => {
+              setIsAsciiTreeParserDialogOpen(open);
+              if (!open) {
+                setAsciiParseError(null); // 关闭对话框时清除错误
+              }
+            }}
           >
             <DialogTrigger>
               <Button variant="link" className="font-bold">
@@ -634,6 +646,13 @@ function App() {
                     rows={10}
                     placeholder={ASCII_TREE_TEMPLATE}
                   />
+                  {asciiParseError && (
+                    <Alert variant="destructive" className="mt-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>Error</AlertTitle>
+                      <div>{asciiParseError}</div>
+                    </Alert>
+                  )}
                 </DialogDescription>
                 <DialogFooter>
                   <Button onClick={() => handleParseAsciiTree()}>OK</Button>
