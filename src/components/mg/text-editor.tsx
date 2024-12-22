@@ -32,7 +32,7 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
       initialValue = "",
       onChange,
       className = "",
-      placeholder = "开始输入... (支持Alt+↑↓移动行，Tab/Shift+Tab调整列表层级，- 创建列表)",
+      placeholder = "Start typing... (Supports Alt+↑↓ to move lines, Tab/Shift+Tab to adjust indent level, - to create lists)",
     },
     ref
   ) => {
