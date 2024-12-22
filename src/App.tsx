@@ -11,12 +11,17 @@ import {
   Settings,
   Trash2,
   Undo2,
+  WandSparkles,
 } from "lucide-react";
 import TextEditor, { TextEditorRef } from "./components/mg/text-editor";
 import { Alert, AlertTitle } from "./components/ui/alert";
 import { generateId, initialTree, TreeNode, TreeState } from "./helper/global";
-import { getNodesBetween } from "./helper/folder";
-import { generateAscii } from "./helper/ascii-tree";
+import { getNodesBetween } from "./helper/explorer";
+import {
+  generateAscii,
+  isValidAsciiTree,
+  parseAsciiTree,
+} from "./helper/ascii-tree";
 import TreeNodeComponent from "./components/mg/tree-node";
 import {
   ResizableHandle,
@@ -35,6 +40,17 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./components/ui/dialog";
+import { Textarea } from "./components/ui/textarea";
+import { ASCII_TREE_TEMPLATE } from "./helper/constants";
 
 interface TextState {
   content: string;
@@ -405,8 +421,14 @@ function App() {
       setLastSelectedId(id);
     }
   };
+  const [isAsciiTreeParserDialogOpen, setIsAsciiTreeParserDialogOpen] =
+    useState(true);
 
   useEffect(() => {
+    if (isAsciiTreeParserDialogOpen) {
+      return;
+    }
+
     const handleKeyDown = (e: KeyboardEvent) => {
       // 撤销
       if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
@@ -428,7 +450,12 @@ function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleUndo, handleRedo, handleFormatMarkdownList]); // 注意添加依赖
+  }, [
+    handleUndo,
+    handleRedo,
+    handleFormatMarkdownList,
+    isAsciiTreeParserDialogOpen,
+  ]); // 注意添加依赖
 
   const asciiTreeRef = useRef<ImperativePanelHandle>(null);
   const [isAsciiTreeCollapse, setIsAsciiTreeCollapse] = useState(false);
@@ -457,6 +484,57 @@ function App() {
     // 这个方法需要通过 props 传给 TextEditor
     editorRef.current?.jumpToLine(lineNumber);
   }, []);
+
+  const asciiTreeTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  function handleParseAsciiTree(): void {
+    const asciiText = asciiTreeTextAreaRef.current?.value;
+    if (!asciiText) return;
+
+    if (isValidAsciiTree(asciiText)) {
+      try {
+        const newTree = parseAsciiTree(asciiText);
+
+        // Convert the tree to markdown format
+        const markdownText = treeToMarkdown(newTree);
+
+        // Update the file tree state
+        setFileTree(newTree);
+
+        // Update the text state
+        setTextState({
+          content: markdownText,
+          isValid: true,
+        });
+
+        // Clear any existing selections
+        setSelectedNodeIds([]);
+        setLastSelectedId(null);
+
+        // Add to history
+        addToHistory(
+          {
+            tree: newTree,
+            selectedNodeIds: [],
+            lastSelectedId: null,
+          },
+          {
+            content: markdownText,
+            isValid: true,
+          }
+        );
+
+        // Close the dialog
+        setIsAsciiTreeParserDialogOpen(false);
+
+        // Reset tree lock state
+        setIsTreeLocked(false);
+      } catch (error) {
+        console.error("Error parsing ASCII tree:", error);
+        // You might want to show an error message to the user here
+      }
+    }
+  }
 
   return (
     <div className="h-screen flex flex-col">
@@ -515,7 +593,7 @@ function App() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="flex">
+        <div className="flex justify-between">
           {/* global bar */}
           <div className="flex">
             <Button
@@ -535,6 +613,33 @@ function App() {
               <Redo2 />
             </Button>
           </div>
+          <Dialog
+            open={isAsciiTreeParserDialogOpen}
+            onOpenChange={setIsAsciiTreeParserDialogOpen}
+          >
+            <DialogTrigger>
+              <Button variant="link" className="font-bold">
+                Generate From Existing ASCII Tree
+                <WandSparkles />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Paste ASCII Tree</DialogTitle>
+                <DialogDescription>
+                  <Textarea
+                    className="text-black"
+                    ref={asciiTreeTextAreaRef}
+                    rows={10}
+                    placeholder={ASCII_TREE_TEMPLATE}
+                  />
+                </DialogDescription>
+                <DialogFooter>
+                  <Button onClick={() => handleParseAsciiTree()}>OK</Button>
+                </DialogFooter>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       {/* main */}
