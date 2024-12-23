@@ -11,7 +11,6 @@ import {
   Settings,
   Trash2,
   Undo2,
-  WandSparkles,
 } from "lucide-react";
 import TextEditor, { TextEditorRef } from "./components/mg/text-editor";
 import { Alert, AlertTitle } from "./components/ui/alert";
@@ -40,17 +39,8 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./components/ui/dialog";
-import { Textarea } from "./components/ui/textarea";
-import { BASIC_ASCII_TREE_TEMPLATE, INITIAL_TREE } from "./helper/constants";
+
+import { INITIAL_TREE } from "./helper/constants";
 import { TextState, TreeNode } from "./typings";
 import { useTreeHistory } from "./hooks/use-tree-history";
 import ShortcutsDialog from "./components/mg/shortcuts";
