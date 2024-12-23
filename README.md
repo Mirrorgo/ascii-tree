@@ -1,37 +1,46 @@
 # ASCII Tree Generator
 
-Generate ASCII directory trees instantly by writing simple Markdown-style bullet points.
+Interactive ASCII folder structure diagram generator with support for multiple project templates.
 
 ## Example
 
-Write this:
+Write in the editor:
 ```markdown
-- Documents
-  - Work
-    - project.doc
-    - budget.xlsx
-  - Personal
-    - resume.pdf
-    - notes.txt
+- src
+  - components
+    - ui
+    - shared
+  - pages
+    - index.tsx
+    - about.tsx
+  - styles
+    - globals.css
 ```
 
-Get this:
+Get instant ASCII tree:
 ```
-Documents
-├── Work
-│   ├── project.doc
-│   └── budget.xlsx
-└── Personal
-    ├── resume.pdf
-    └── notes.txt
+src
+├── components
+│   ├── ui
+│   └── shared
+├── pages
+│   ├── index.tsx
+│   └── about.tsx
+└── styles
+    └── globals.css
 ```
 
 ## Features
-- 🚀 Convert bullet points to ASCII trees instantly
-- ✨ Interactive visual tree editor
-- 🔄 Real-time preview
-- 📋 One-click copy to clipboard
-- 🎯 Simple and intuitive interface
+<!-- - 🎨 Visual tree editor with drag-and-drop support -->
+- 📝 Write in Markdown-style list format
+- 🔄 Bidirectional conversion between list and ASCII tree
+- 🎯 Keyboard shortcuts for quick editing
+- ⚡ Project templates for popular frameworks:
+  - Next.js (App/Pages Router)
+  - Vite (React/Vue)
+  - T3 Stack
+  - Monorepo
+  - And more...
 
 ## Try It Out
 [Live Demo](https://ascii-tree.unimelb.top)
@@ -41,5 +50,5 @@ Documents
 
 ---
 <div align="center">
-Made with ❤️ by <a href="https://github.com/Mirrorgo">Mirrorgo</a>
+  Made with ❤️ by <a href="https://github.com/Mirrorgo">Mirrorgo</a>
 </div>

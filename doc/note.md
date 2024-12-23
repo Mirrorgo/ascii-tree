@@ -1,5 +1,7 @@
 # ASCII folder structure diagrams
 ## 当前已有功能
+- global
+  - 快捷键的列表
 - explorer view
   - 基础交互
     - 增
@@ -88,7 +90,6 @@
 
 svg的支持当前图像下载和标准图像下载
 
-快捷键的列表
 
 分享成预览模式
 
