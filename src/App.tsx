@@ -53,6 +53,7 @@ import { Textarea } from "./components/ui/textarea";
 import { ASCII_TREE_TEMPLATE, INITIAL_TREE } from "./helper/constants";
 import { TextState, TreeNode } from "./typings";
 import { useTreeHistory } from "./hooks/use-tree-history";
+import ShortcutsDialog from "./components/mg/shortcuts";
 
 function App() {
   const {
@@ -523,6 +524,7 @@ function App() {
             >
               Reset
             </Button>
+            <ShortcutsDialog />
           </div>
           <Dialog
             open={isAsciiTreeParserDialogOpen}

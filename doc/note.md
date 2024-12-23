@@ -110,3 +110,20 @@ svg的支持当前图像下载和标准图像下载
 
 > 因为存在文本编辑器部分编辑失败的情况，所以应该是双数据源
 > 而且,双数据源
+
+
+支持区分folder和普通文件, 支持注释
+```
+company-project/              # 公司总项目目录
+  ├── main-egg-project/      # 原有的 egg 项目
+  │   ├── .git/             # egg项目的git
+  │   ├── package.json      # egg项目的依赖
+  │   └── app/
+  │       └── public/
+  │           └── antd-pro/ # 只存放 antd pro 的构建产物
+  │
+  └── antd-project/         # antd pro 项目
+      ├── .git/            # antd项目的git  
+      ├── package.json     # antd项目的依赖
+      └── src/
+```
