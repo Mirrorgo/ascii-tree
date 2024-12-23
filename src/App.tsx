@@ -2,10 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Clipboard,
   Github,
   Redo2,
   Settings,
@@ -45,6 +41,7 @@ import { TextState, TreeNode } from "./typings";
 import { useTreeHistory } from "./hooks/use-tree-history";
 import ShortcutsDialog from "./components/mg/shortcuts";
 import AsciiTreeParserDialog from "./components/mg/ascii-tree-parser-dialog";
+import AsciiTreePanel from "./components/mg/ascii-tree-panel";
 
 function App() {
   const {
@@ -64,8 +61,6 @@ function App() {
   } = useTreeHistory();
 
   // const { toast } = useToast();
-
-  const [copied, setCopied] = useState(false);
 
   // 文本状态
   const [textState, setTextState] = useState<TextState>({
@@ -539,7 +534,11 @@ function App() {
             {showExplorerPanel && (
               <>
                 {/* 不加order会产生bug：from 库 readme */}
-                <ResizablePanel id="explorer" order={1}>
+                <ResizablePanel
+                  id="explorer"
+                  order={1}
+                  className="flex flex-col h-full"
+                >
                   <div className="flex gap-2 justify-center">
                     <Button
                       size="sm"
@@ -571,65 +570,29 @@ function App() {
                       <Trash2 />
                     </Button>
                   </div>
-                  <TreeNodeComponent
-                    node={fileTree}
-                    onUpdate={updateNode}
-                    selectedNodeIds={selectedNodeIds}
-                    onSelectNode={(id, ctrlKey, shiftKey) =>
-                      handleNodeSelection(id, ctrlKey, shiftKey)
-                    }
-                    disabled={isTreeLocked}
-                  />
+                  <div className="flex-1 overflow-auto min-h-0">
+                    <TreeNodeComponent
+                      node={fileTree}
+                      onUpdate={updateNode}
+                      selectedNodeIds={selectedNodeIds}
+                      onSelectNode={(id, ctrlKey, shiftKey) =>
+                        handleNodeSelection(id, ctrlKey, shiftKey)
+                      }
+                      disabled={isTreeLocked}
+                    />
+                  </div>
                 </ResizablePanel>
                 <ResizableHandle withHandle={showResizeHandle} />
               </>
             )}
-            <ResizablePanel
-              ref={asciiTreeRef}
-              order={2}
-              id="ascii-tree"
-              minSize={30}
-              collapsible
-              collapsedSize={9}
-              onCollapse={() => setIsAsciiTreeCollapse(true)}
-              onExpand={() => setIsAsciiTreeCollapse(false)}
-            >
-              <div
-                className="mt-1 px-2 flex justify-between items-center cursor-pointer"
-                onClick={() => {
-                  if (isAsciiTreeCollapse) asciiTreeRef.current?.expand();
-                  else asciiTreeRef.current?.collapse();
-                  setIsAsciiTreeCollapse(!isAsciiTreeCollapse);
-                }}
-              >
-                {!showExplorerPanel ? (
-                  <div className="w-6" />
-                ) : isAsciiTreeCollapse ? (
-                  <ChevronRight />
-                ) : (
-                  <ChevronDown />
-                )}
-                <div className="font-bold uppercase">ascii tree</div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={(e) => {
-                    setCopied(true);
-                    setTimeout(() => {
-                      setCopied(false);
-                    }, 600);
-                    const ascii = generateAscii(fileTree);
-                    navigator.clipboard.writeText(ascii);
-                    e.stopPropagation();
-                  }}
-                >
-                  {copied ? <Check /> : <Clipboard />}
-                </Button>
-              </div>
-              <div className="flex-1 px-2 py-1 font-mono whitespace-pre">
-                {generateAscii(fileTree)}
-              </div>
-            </ResizablePanel>
+            <AsciiTreePanel
+              asciiTreeRef={asciiTreeRef}
+              isAsciiTreeCollapse={isAsciiTreeCollapse}
+              setIsAsciiTreeCollapse={setIsAsciiTreeCollapse}
+              showExplorerPanel={showExplorerPanel}
+              fileTree={fileTree}
+              generateAscii={generateAscii}
+            />
           </ResizablePanelGroup>
         </ResizablePanel>
         <ResizableHandle withHandle={showResizeHandle} />
