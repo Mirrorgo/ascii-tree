@@ -50,10 +50,11 @@ import {
   DialogTrigger,
 } from "./components/ui/dialog";
 import { Textarea } from "./components/ui/textarea";
-import { ASCII_TREE_TEMPLATE, INITIAL_TREE } from "./helper/constants";
+import { BASIC_ASCII_TREE_TEMPLATE, INITIAL_TREE } from "./helper/constants";
 import { TextState, TreeNode } from "./typings";
 import { useTreeHistory } from "./hooks/use-tree-history";
 import ShortcutsDialog from "./components/mg/shortcuts";
+import AsciiTreeParserDialog from "./components/mg/ascii-tree-parser-dialog";
 
 function App() {
   const {
@@ -526,50 +527,19 @@ function App() {
             </Button>
             <ShortcutsDialog />
           </div>
-          <Dialog
-            open={isAsciiTreeParserDialogOpen}
-            onOpenChange={(open) => {
-              setIsAsciiTreeParserDialogOpen(open);
-              if (!open) {
-                setAsciiParseError(null); // 关闭对话框时清除错误
-              }
-            }}
-          >
-            <DialogTrigger>
-              <Button variant="link" className="font-bold">
-                Generate From Existing ASCII Tree
-                <WandSparkles />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Paste ASCII Tree</DialogTitle>
-                <DialogDescription>
-                  <Textarea
-                    className="text-black"
-                    ref={asciiTreeTextAreaRef}
-                    rows={10}
-                    placeholder={ASCII_TREE_TEMPLATE}
-                  />
-                  {asciiParseError && (
-                    <Alert variant="destructive" className="mt-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertTitle>Error</AlertTitle>
-                      <div>{asciiParseError}</div>
-                    </Alert>
-                  )}
-                </DialogDescription>
-                <DialogFooter>
-                  <Button onClick={() => handleParseAsciiTree()}>OK</Button>
-                </DialogFooter>
-              </DialogHeader>
-            </DialogContent>
-          </Dialog>
+          <AsciiTreeParserDialog
+            isAsciiTreeParserDialogOpen={isAsciiTreeParserDialogOpen}
+            setIsAsciiTreeParserDialogOpen={setIsAsciiTreeParserDialogOpen}
+            asciiParseError={asciiParseError}
+            setAsciiParseError={setAsciiParseError}
+            asciiTreeTextAreaRef={asciiTreeTextAreaRef}
+            handleParseAsciiTree={handleParseAsciiTree}
+          />
         </div>
       </div>
       {/* main */}
 
-      <ResizablePanelGroup direction="horizontal" className="">
+      <ResizablePanelGroup direction="horizontal">
         <ResizablePanel
           defaultSize={defaultSize}
           maxSize={maxSize}
