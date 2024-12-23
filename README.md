@@ -41,5 +41,5 @@ Documents
 
 ---
 <div align="center">
-Made with ❤️ by <a href="https://github.com/Mirrorgoss">Mirrorgo</a>
+Made with ❤️ by <a href="https://github.com/Mirrorgo">Mirrorgo</a>
 </div>
