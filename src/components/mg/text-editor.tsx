@@ -39,6 +39,9 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
     const [content, setContent] = useState<string>(initialValue);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
+    // 踪输入法组合状态
+    const isComposingRef = useRef(false);
+
     // 暴露跳转方法给外部
     useImperativeHandle(ref, () => ({
       jumpToLine: (lineNumber: number) => {
@@ -90,6 +93,11 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
     };
 
     const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      // 如果正在输入法组合状态，不处理任何快捷键
+      if (isComposingRef.current) {
+        return;
+      }
+
       const textarea = textareaRef.current;
       if (!textarea) return;
 
@@ -214,6 +222,12 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
         onKeyDown={handleKeyDown}
         className={`p-4 resize-none rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-base ${className}`}
         placeholder={placeholder}
+        onCompositionStart={() => {
+          isComposingRef.current = true;
+        }}
+        onCompositionEnd={() => {
+          isComposingRef.current = false;
+        }}
       />
     );
   }
