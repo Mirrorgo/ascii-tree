@@ -92,29 +92,6 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
       };
     };
 
-    // 处理滚动到当前光标位置
-    const scrollToCursor = (
-      textarea: HTMLTextAreaElement,
-      cursorPosition: number
-    ) => {
-      const text = textarea.value;
-      const lineIndex = text.substring(0, cursorPosition).split("\n").length;
-      const lineHeight = 20; // 预估行高
-      const padding = 40; // textarea padding
-      const desiredScrollPosition = Math.max(
-        0,
-        (lineIndex - 1) * lineHeight - padding
-      );
-
-      // 立即滚动
-      textarea.scrollTop = desiredScrollPosition;
-
-      // 确保在下一帧也滚动到正确位置
-      requestAnimationFrame(() => {
-        textarea.scrollTop = desiredScrollPosition;
-      });
-    };
-
     const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
       // 如果正在输入法组合状态，不处理任何快捷键
       if (isComposingRef.current) {
@@ -214,16 +191,34 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
           updateContent(newContent, () => {
             const newPosition = selectionStart + listItem.indent.length + 3;
             textarea.setSelectionRange(newPosition, newPosition);
-            scrollToCursor(textarea, newPosition);
-          });
-        } else {
-          // 普通回车键处理
-          setTimeout(() => {
-            if (textarea) {
-              scrollToCursor(textarea, selectionStart + 1);
+
+            // 计算新生成的列表项位置，考虑 padding
+            const lineHeight =
+              parseFloat(getComputedStyle(textarea).lineHeight) || 20;
+            const currentLineIndex = newContent
+              .substring(0, newPosition)
+              .split("\n").length;
+
+            // 考虑 padding，新行的实际位置需要加上顶部 padding
+            const padding = 16; // p-4 = 16px
+            const newLineTop = currentLineIndex * lineHeight + padding;
+
+            // 获取 textarea 的可视区域范围
+            const visibleTop = textarea.scrollTop;
+            const visibleBottom =
+              visibleTop + textarea.clientHeight - padding * 2;
+
+            // 只有当新列表项不在可视区域时才滚动
+            // 为了更好的体验，我们在底部预留一行的空间
+            if (newLineTop > visibleBottom - lineHeight) {
+              // 滚动时确保新行在视野中间偏下的位置
+              const targetScrollTop =
+                newLineTop - textarea.clientHeight + lineHeight + padding * 2;
+              textarea.scrollTop = Math.max(0, targetScrollTop);
             }
-          }, 0);
+          });
         }
+        // 对于非列表项的回车,不做任何处理,让浏览器处理默认行为
       }
     };
 
