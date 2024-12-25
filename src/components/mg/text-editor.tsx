@@ -92,6 +92,29 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
       };
     };
 
+    // 处理滚动到当前光标位置
+    const scrollToCursor = (
+      textarea: HTMLTextAreaElement,
+      cursorPosition: number
+    ) => {
+      const text = textarea.value;
+      const lineIndex = text.substring(0, cursorPosition).split("\n").length;
+      const lineHeight = 20; // 预估行高
+      const padding = 40; // textarea padding
+      const desiredScrollPosition = Math.max(
+        0,
+        (lineIndex - 1) * lineHeight - padding
+      );
+
+      // 立即滚动
+      textarea.scrollTop = desiredScrollPosition;
+
+      // 确保在下一帧也滚动到正确位置
+      requestAnimationFrame(() => {
+        textarea.scrollTop = desiredScrollPosition;
+      });
+    };
+
     const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
       // 如果正在输入法组合状态，不处理任何快捷键
       if (isComposingRef.current) {
@@ -191,7 +214,15 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
           updateContent(newContent, () => {
             const newPosition = selectionStart + listItem.indent.length + 3;
             textarea.setSelectionRange(newPosition, newPosition);
+            scrollToCursor(textarea, newPosition);
           });
+        } else {
+          // 普通回车键处理
+          setTimeout(() => {
+            if (textarea) {
+              scrollToCursor(textarea, selectionStart + 1);
+            }
+          }, 0);
         }
       }
     };
