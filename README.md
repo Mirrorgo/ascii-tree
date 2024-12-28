@@ -1,4 +1,4 @@
-# ASCII Tree Generator
+# TreeScii - ASCII Tree Generator
 
 Interactive ASCII folder structure diagram generator with support for multiple project templates.
 

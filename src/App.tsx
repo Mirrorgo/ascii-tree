@@ -421,7 +421,7 @@ function App() {
             href="https://github.com/Mirrorgo/ascii-tree/"
           >
             <div className="font-bold text-xl mr-2">
-              ASCII folder structure diagrams
+              TreeScii - ASCII Tree Generator
             </div>
             <Github className="cursor-pointer" />
           </a>
