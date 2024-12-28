@@ -23,6 +23,7 @@ export function useTreeHistory() {
         text: {
           content: treeToMarkdown(fileTree),
           isValid: true,
+          error: null,
         },
       };
       setHistory([initialEntry]);
