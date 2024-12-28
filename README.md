@@ -35,12 +35,7 @@ src
 - 📝 Write in Markdown-style list format
 - 🔄 Bidirectional conversion between list and ASCII tree
 - 🎯 Keyboard shortcuts for quick editing
-- ⚡ Project templates for popular frameworks:
-  - Next.js (App/Pages Router)
-  - Vite (React/Vue)
-  - T3 Stack
-  - Monorepo
-  - And more...
+- ⚡ Project templates for popular frameworks
 
 ## Try It Out
 [Live Demo](https://ascii-tree.unimelb.top)
