@@ -9,11 +9,13 @@ const generateAscii = (
 ): string => {
   let result = "";
 
+  const displayName = node.name;
+
   if (isRoot) {
-    result = node.name + "\n";
+    result = displayName + "\n";
     prefix = "";
   } else {
-    result = prefix + (isLast ? "└── " : "├── ") + node.name + "\n";
+    result = prefix + (isLast ? "└── " : "├── ") + displayName + "\n";
   }
 
   if (node.children && node.children.length > 0) {
@@ -32,66 +34,126 @@ const generateAscii = (
   return result;
 };
 
-// 解析 ASCII 树结构的函数
+// Parse ASCII tree structure
 function parseAsciiTree(asciiText: string): TreeNode {
   const lines = asciiText.split("\n").filter((line) => line.trim());
 
-  // 第一行作为根节点
-  const rootName = lines[0].trim();
+  // First line as root node - remove trailing slash if present
+  const rootName = lines[0].trim().replace(/\/$/, "");
   const root: TreeNode = {
     id: generateId(),
     name: rootName,
     children: [],
   };
 
-  // 当前处理的节点栈，每个元素包含节点和其层级
   const stack: { node: TreeNode; level: number }[] = [
     { node: root, level: -1 },
   ];
 
-  // 从第二行开始处理子节点
   lines.slice(1).forEach((line) => {
-    // 计算当前行的层级（通过计算前导符号的数量）
     const level = Math.floor(line.search(/[^\s│├└]/) / 4);
 
-    // 提取节点名称（移除树形符号）
-    const name = line.replace(/[│├└─\s]+/, "").trim();
+    // Extract node name (remove tree symbols and trailing slash)
+    const name = line
+      .replace(/[│├└─\s]+/, "")
+      .trim()
+      .replace(/\/$/, ""); // Remove trailing slash using regex
 
-    // 创建新节点
+    // Create new node
     const newNode: TreeNode = {
       id: generateId(),
       name,
       children: [],
     };
 
-    // 回溯栈直到找到合适的父节点
+    // Backtrack stack to find parent node
     while (stack.length > 1 && stack[stack.length - 1].level >= level) {
       stack.pop();
     }
 
-    // 将新节点添加到父节点的子节点列表中
     const parent = stack[stack.length - 1].node;
     if (!parent.children) parent.children = [];
     parent.children.push(newNode);
 
-    // 将新节点压入栈中
     stack.push({ node: newNode, level });
   });
 
   return root;
 }
 
-// 用于验证输入文本是否是有效的 ASCII 树格式
 function isValidAsciiTree(text: string): boolean {
   const lines = text.split("\n").filter((line) => line.trim());
   if (lines.length === 0) return false;
 
-  // 第一行应该是根节点名称，不带任何前缀符号
-  if (/[│├└─]/.test(lines[0])) return false;
+  // 1. Validate root node - consider trailing slash in validation
+  const rootLine = lines[0].trim().replace(/\/$/, "");
+  if (
+    rootLine.includes("│") ||
+    rootLine.includes("├") ||
+    rootLine.includes("└") ||
+    rootLine.includes("─")
+  ) {
+    return false;
+  }
 
-  // 验证其余行
-  const validLinePattern = /^((\s*)(│\s*)*[├└]──\s*|\s*)[^\s].+$/;
-  return lines.slice(1).every((line) => validLinePattern.test(line));
+  // 2. Validate subsequent lines
+  let lastIndentLevel = 0;
+  const indentStack: number[] = [0];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Basic format check: remove trailing slash before validation
+    const cleanLine = line.replace(/\/$/, "");
+    const indentMatch = cleanLine.match(/^(\s*(│\s+)*)(├──|└──)\s+\S.*?$/);
+    if (!indentMatch) return false;
+
+    // Calculate current line's indent level
+    const indent = line.search(/[^\s│]/);
+    const indentLevel = Math.floor(indent / 4);
+
+    // Check if indent is reasonable
+    if (indent % 4 !== 0) return false;
+
+    // Check if indent level change is reasonable
+    if (indentLevel > lastIndentLevel + 1) return false;
+
+    // If indent decreases, update indent stack
+    while (
+      indentStack.length > 0 &&
+      indentLevel < indentStack[indentStack.length - 1]
+    ) {
+      indentStack.pop();
+    }
+
+    // Check vertical line positions
+    const prefixPart = line.substring(0, indent);
+    const expectedPipes = indentLevel;
+    const actualPipes = (prefixPart.match(/│/g) || []).length;
+
+    if (actualPipes > expectedPipes) return false;
+
+    // Check lines after └──
+    if (i > 0 && lines[i - 1].includes("└──")) {
+      const prevIndent = lines[i - 1].search(/[^\s│]/);
+      const prevPart = lines[i - 1].substring(0, prevIndent);
+      const currentPart = line.substring(0, prevIndent);
+
+      if (
+        line.length > prevIndent &&
+        currentPart.split("│").length > prevPart.split("│").length
+      ) {
+        return false;
+      }
+    }
+
+    lastIndentLevel = indentLevel;
+    if (line.includes("├──") || line.includes("└──")) {
+      indentStack.push(indentLevel);
+    }
+  }
+
+  return true;
 }
 
 export { generateAscii, parseAsciiTree, isValidAsciiTree };
