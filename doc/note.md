@@ -128,3 +128,88 @@ company-project/              # 公司总项目目录
       ├── package.json     # antd项目的依赖
       └── src/
 ```
+
+
+```
+company-project/              
+  ├── main-egg-project/      
+  │   ├── .git/             
+  │   ├── package.json      
+  │   └── app/
+  │       └── public/
+  │           └── antd-pro/ 
+  │
+  └── antd-project/         
+      ├── .git/              
+      ├── package.json     
+      └── src/
+```
+folder 变成蓝色
+
+
+```
+.gitignore
+README.md
+components.json
+doc/
+└── note.md
+eslint.config.js
+index.html
+package.json
+pnpm-lock.yaml
+postcss.config.js
+public/
+└── vite.svg
+src/
+├── App.tsx
+└── assets/
+    └── react.svg
+└── components/
+    └── mg/
+        ├── ascii-tree-panel.tsx
+        ├── ascii-tree-parser-dialog.tsx
+        └── markdown-editor/
+            ├── index.tsx
+            └── text-editor.tsx
+        ├── shortcuts.tsx
+        └── tree-node.tsx
+    └── ui/
+        ├── accordion.tsx
+        ├── alert.tsx
+        ├── button.tsx
+        ├── dialog.tsx
+        ├── dropdown-menu.tsx
+        ├── input.tsx
+        ├── menubar.tsx
+        ├── resizable.tsx
+        ├── select.tsx
+        ├── textarea.tsx
+        ├── toast.tsx
+        └── toaster.tsx
+└── helper/
+    ├── ascii-tree.ts
+    ├── constants.ts
+    ├── explorer.ts
+    └── global.ts
+└── hooks/
+    ├── use-responsive-panel.ts
+    ├── use-toast.ts
+    └── use-tree-history.ts
+├── index.css
+└── lib/
+    └── utils.ts
+├── main.tsx
+└── typings/
+    └── index.ts
+└── vite-env.d.ts
+tailwind.config.js
+tsconfig.app.json
+tsconfig.json
+tsconfig.node.json
+vite.config.ts
+
+
+```
+
+
+可以用 https://tree.uncenter.dev/ 配合， 是否还要自己实现这个project的功能？

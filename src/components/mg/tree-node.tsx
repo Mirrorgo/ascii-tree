@@ -8,6 +8,12 @@ import {
 import { FocusEvent, MouseEventHandler, useState } from "react";
 import { Input } from "../ui/input";
 import { TreeNode } from "@/typings";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 const TreeNodeComponent = ({
   node,
@@ -75,14 +81,21 @@ const TreeNodeComponent = ({
         )}
         {isEditing ? (
           <Input
-            className="h-6 mx-0 max-w-32"
+            className="h-6 mx-0"
             autoFocus
             onClick={(e) => e.stopPropagation()}
             onBlur={saveEdit}
             defaultValue={node.name}
           />
         ) : (
-          <span>{node.name}</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="truncate flex-1">{node.name}</span>
+              </TooltipTrigger>
+              <TooltipContent>{node.name}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
         <SquarePen
           onClick={handleEdit}
