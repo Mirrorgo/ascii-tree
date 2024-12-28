@@ -1,15 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertTriangle,
-  Github,
-  Redo2,
-  Settings,
-  Trash2,
-  Undo2,
-} from "lucide-react";
-import TextEditor, { TextEditorRef } from "./components/mg/text-editor";
-import { Alert, AlertTitle } from "./components/ui/alert";
+import { Github, Redo2, Settings, Trash2, Undo2 } from "lucide-react";
+import { TextEditorRef } from "./components/mg/markdown-editor/text-editor";
 import { generateId, markdownToTree, treeToMarkdown } from "./helper/global";
 import { getNodesBetween } from "./helper/explorer";
 import {
@@ -42,6 +34,7 @@ import { useTreeHistory } from "./hooks/use-tree-history";
 import ShortcutsDialog from "./components/mg/shortcuts";
 import AsciiTreeParserDialog from "./components/mg/ascii-tree-parser-dialog";
 import AsciiTreePanel from "./components/mg/ascii-tree-panel";
+import MarkdownEditor from "./components/mg/markdown-editor";
 
 function App() {
   const {
@@ -59,8 +52,6 @@ function App() {
     canUndo,
     canRedo,
   } = useTreeHistory();
-
-  // const { toast } = useToast();
 
   // 文本状态
   const [textState, setTextState] = useState<TextState>({
@@ -345,15 +336,9 @@ function App() {
   }
 
   const [showResizeHandle, setShowResizeHandle] = useState(true);
-
   const [showExplorerPanel, setShowExplorerPanel] = useState(true);
 
   const editorRef = useRef<TextEditorRef>(null);
-
-  const handleJumpToLine = useCallback((lineNumber: number) => {
-    // 这个方法需要通过 props 传给 TextEditor
-    editorRef.current?.jumpToLine(lineNumber);
-  }, []);
 
   const asciiTreeTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
   const [asciiParseError, setAsciiParseError] = useState<string | null>(null);
@@ -597,59 +582,13 @@ function App() {
         </ResizablePanel>
         <ResizableHandle withHandle={showResizeHandle} />
         <ResizablePanel>
-          <div className="flex-1 flex flex-col h-full m-1">
-            <TextEditor
-              ref={editorRef}
-              initialValue={textState.content}
-              onChange={handleEditorChange}
-              className="w-full flex-1 "
-            />
-            <div className="h-20">
-              {!textState.isValid && (
-                <Alert
-                  variant="destructive"
-                  className="mt-2 flex justify-between items-center"
-                >
-                  <div className="flex gap-3 items-center">
-                    <AlertTriangle className="h-5 w-5 mb-1" />
-                    <div>
-                      <AlertTitle>Parse Error</AlertTitle>
-                      <div>
-                        {textState.error
-                          ?.split(/line (\d+)/)
-                          .map((part, index) => {
-                            if (index % 2 === 1) {
-                              // 这是行号
-                              return (
-                                <Button
-                                  key={index}
-                                  variant="link"
-                                  size="sm"
-                                  className="px-1 h-auto text-destructive text-sm underline"
-                                  onClick={() =>
-                                    handleJumpToLine(parseInt(part))
-                                  }
-                                >
-                                  {`line ${part}`}
-                                </Button>
-                              );
-                            }
-                            return part;
-                          })}
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    variant={"destructive"}
-                    size="icon"
-                    onClick={handleUndo}
-                  >
-                    <Undo2 />
-                  </Button>
-                </Alert>
-              )}
-            </div>
-          </div>
+          <MarkdownEditor
+            ref={editorRef}
+            value={textState.content}
+            onChange={handleEditorChange}
+            textState={textState}
+            onUndo={handleUndo}
+          />
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
