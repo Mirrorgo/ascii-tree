@@ -1,3 +1,12 @@
+type MarkdownParseError = {
+  content: string;
+  type: string;
+  location: {
+    line: number;
+    column: number;
+  };
+};
+
 interface TreeNode {
   id: string;
   name: string;
@@ -7,7 +16,7 @@ interface TreeNode {
 interface TextState {
   content: string;
   isValid: boolean;
-  error?: string;
+  error: MarkdownParseError | null;
 }
 
 interface TreeState {
@@ -21,4 +30,10 @@ interface HistoryEntry {
   text: TextState;
 }
 
-export type { TreeNode, TextState, TreeState, HistoryEntry };
+export type {
+  TreeNode,
+  TextState,
+  TreeState,
+  HistoryEntry,
+  MarkdownParseError,
+};

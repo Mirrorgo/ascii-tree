@@ -9,7 +9,7 @@ import {
 } from "react";
 
 export interface TextEditorRef {
-  jumpToLine: (lineNumber: number) => void;
+  jumpToPosition: (lineNumber: number, column: number) => void;
 }
 
 interface ListItemMatch {
@@ -42,36 +42,49 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
     // 踪输入法组合状态
     const isComposingRef = useRef(false);
 
+    // 计算给定行列位置在整个文本中的索引位置
+    const calculatePosition = (lineNumber: number, column: number): number => {
+      const lines = content.split("\n");
+      let position = 0;
+
+      // 计算到目标行之前的所有字符数
+      for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
+        position += lines[i].length + 1; // +1 是换行符
+      }
+
+      // 加上目标行的列位置
+      if (lineNumber <= lines.length) {
+        const targetLine = lines[lineNumber - 1];
+        // 确保列位置不超过行长度
+        position += Math.min(column - 1, targetLine.length);
+      }
+
+      return position;
+    };
+
     // 暴露跳转方法给外部
     useImperativeHandle(ref, () => ({
-      jumpToLine: (lineNumber: number) => {
+      jumpToPosition(lineNumber: number, column: number) {
         const textarea = textareaRef.current;
         if (!textarea) return;
 
-        const lines = content.split("\n");
-        let position = 0;
-
-        // 计算目标行的位置
-        for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
-          position += lines[i].length + 1; // +1 是换行符
-        }
-
-        // 加上当前行的长度，使光标定位到行尾
-        if (lineNumber <= lines.length) {
-          position += lines[lineNumber - 1].length;
-        }
+        const position = calculatePosition(lineNumber, column);
 
         // 聚焦并设置光标位置
         textarea.focus();
         textarea.setSelectionRange(position, position);
 
-        // 滚动到可见区域
+        // 计算滚动位置
         const lineHeight = 20; // 预估的行高
         const padding = 40; // textarea 的 padding
-        textarea.scrollTop = Math.max(
+        const visibleLines = Math.floor(textarea.clientHeight / lineHeight);
+        const scrollPosition = Math.max(
           0,
-          (lineNumber - 1) * lineHeight - padding
+          (lineNumber - Math.floor(visibleLines / 2)) * lineHeight - padding
         );
+
+        // 滚动到目标位置，使光标尽量居中显示
+        textarea.scrollTop = scrollPosition;
       },
     }));
 

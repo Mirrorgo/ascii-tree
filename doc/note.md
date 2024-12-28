@@ -213,3 +213,17 @@ vite.config.ts
 
 
 可以用 https://tree.uncenter.dev/ 配合， 是否还要自己实现这个project的功能？
+
+
+目前generate from existing的时候会去掉结尾的 / 
+
+future: 记录产生的是文件还是文件夹
+没有标注 / 的则按照先前的规则,有子级的就是folder,没有的是文件.
+然后在md 视图永远展示 / , 且没有 / & 有子级 会报错
+
+folder那边用图标表示, 不展示 / 
+
+ascii-tree那边生成的默认带有 / , 但是可以关闭掉 / 
+
+
+文件夹和文件的颜色不一样在ascii-tree这边看的话

@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Undo2 } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import TextEditor, { TextEditorRef } from "./text-editor";
+import { MarkdownParseError } from "@/typings";
 
-// 类型定义
 export interface TextState {
   content: string;
   isValid: boolean;
-  error?: string;
+  error: MarkdownParseError | null;
 }
 
 interface MarkdownEditorProps {
@@ -19,22 +19,21 @@ interface MarkdownEditorProps {
 }
 
 export interface MarkdownEditorRef {
-  jumpToLine: (lineNumber: number) => void;
+  jumpToPosition: (lineNumber: number, column: number) => void;
 }
 
 const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
   ({ value, onChange, textState, onUndo }, ref) => {
     const editorRef = useRef<TextEditorRef>(null);
 
-    // 暴露给父组件的方法
     useImperativeHandle(ref, () => ({
-      jumpToLine: (lineNumber: number) => {
-        editorRef.current?.jumpToLine(lineNumber);
+      jumpToPosition: (lineNumber: number, column: number) => {
+        editorRef.current?.jumpToPosition(lineNumber, column);
       },
     }));
 
-    const handleJumpToLine = (lineNumber: number) => {
-      editorRef.current?.jumpToLine(lineNumber);
+    const handleJumpToError = (lineNumber: number, column: number) => {
+      editorRef.current?.jumpToPosition(lineNumber, column);
     };
 
     return (
@@ -46,7 +45,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
           className="w-full flex-1"
         />
         <div className="h-20">
-          {!textState.isValid && (
+          {!textState.isValid && textState.error && (
             <Alert
               variant="destructive"
               className="mt-2 flex justify-between items-center"
@@ -54,26 +53,27 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
               <div className="flex gap-3 items-center">
                 <AlertTriangle className="h-5 w-5 mb-1" />
                 <div>
-                  <AlertTitle>Parse Error</AlertTitle>
-                  <div>
-                    {textState.error?.split(/line (\d+)/).map((part, index) => {
-                      if (index % 2 === 1) {
-                        // 这是行号部分
-                        return (
+                  <AlertTitle>
+                    {(() => {
+                      const { location, type } = textState.error;
+                      return (
+                        <>
+                          {type} at{" "}
                           <Button
-                            key={index}
                             variant="link"
                             size="sm"
                             className="px-1 h-auto text-destructive text-sm underline"
-                            onClick={() => handleJumpToLine(parseInt(part))}
+                            onClick={() =>
+                              handleJumpToError(location.line, location.column)
+                            }
                           >
-                            {`line ${part}`}
+                            {`[Ln ${location.line}, Col ${location.column}]`}
                           </Button>
-                        );
-                      }
-                      return part;
-                    })}
-                  </div>
+                        </>
+                      );
+                    })()}
+                  </AlertTitle>
+                  <div>{textState.error.content}</div>
                 </div>
               </div>
               <Button variant="destructive" size="icon" onClick={onUndo}>

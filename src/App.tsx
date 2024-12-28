@@ -57,12 +57,14 @@ function App() {
   const [textState, setTextState] = useState<TextState>({
     content: treeToMarkdown(INITIAL_TREE),
     isValid: true,
+    error: null,
   });
 
   const handleEditorChange = (value: string) => {
     setTextState({
       content: value,
       isValid: true,
+      error: null,
     });
 
     const { tree, error } = markdownToTree(value);
@@ -80,7 +82,7 @@ function App() {
 
       addToHistory(
         { tree: newTree, selectedNodeIds, lastSelectedId },
-        { content: value, isValid: true }
+        { content: value, isValid: true, error: null }
       );
     }
   };
@@ -142,11 +144,12 @@ function App() {
     setTextState({
       content: newText,
       isValid: true,
+      error: null,
     });
 
     addToHistory(
       { tree: newTree, selectedNodeIds, lastSelectedId },
-      { content: newText, isValid: true }
+      { content: newText, isValid: true, error: null }
     );
   };
 
@@ -188,11 +191,17 @@ function App() {
     setTextState({
       content: newText,
       isValid: true,
+      error: null,
     });
 
     addToHistory(
       { tree: newTree, selectedNodeIds, lastSelectedId },
-      { content: newText, isValid: true }
+      {
+        content: newText,
+        isValid: true,
+
+        error: null,
+      }
     );
   };
   const deleteNode = () => {
@@ -221,11 +230,12 @@ function App() {
     setTextState({
       content: newText,
       isValid: true,
+      error: null,
     });
 
     addToHistory(
       { tree: newTree, selectedNodeIds: [], lastSelectedId: null },
-      { content: newText, isValid: true }
+      { content: newText, isValid: true, error: null }
     );
   };
 
@@ -250,11 +260,12 @@ function App() {
     setTextState({
       content: newText,
       isValid: true,
+      error: null,
     });
 
     addToHistory(
       { tree: newTree, selectedNodeIds, lastSelectedId },
-      { content: newText, isValid: true }
+      { content: newText, isValid: true, error: null }
     );
   };
 
@@ -327,11 +338,12 @@ function App() {
     const newText = treeToMarkdown(fileTree);
     addToHistory(
       { tree: fileTree, selectedNodeIds, lastSelectedId },
-      { content: newText, isValid: true }
+      { content: newText, isValid: true, error: null }
     );
     setTextState({
       content: newText,
       isValid: true,
+      error: null,
     });
   }
 
@@ -361,6 +373,7 @@ function App() {
         setTextState({
           content: markdownText,
           isValid: true,
+          error: null,
         });
 
         // Clear any existing selections
@@ -377,6 +390,7 @@ function App() {
           {
             content: markdownText,
             isValid: true,
+            error: null,
           }
         );
 
@@ -404,10 +418,11 @@ function App() {
     setTextState({
       content: newText,
       isValid: true,
+      error: null,
     });
     addToHistory(
       { tree: INITIAL_TREE, selectedNodeIds: [], lastSelectedId: null },
-      { content: newText, isValid: true }
+      { content: newText, isValid: true, error: null }
     );
   }
 
