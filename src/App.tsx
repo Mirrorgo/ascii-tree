@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
+  ChevronsDownUp,
   FilePlus,
   FolderPlus,
   Github,
@@ -17,7 +18,7 @@ import {
   isValidAsciiTree,
   parseAsciiTree,
 } from "./helper/ascii-tree";
-import TreeNodeComponent from "./components/mg/tree-node";
+import TreeNodeComponent, { TreeNodeRef } from "./components/mg/tree-node";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -384,6 +385,7 @@ function App() {
 
     // 如果没有选中节点,或选中的是根节点
     if (!selectedNodeId || selectedNodeId === "root") {
+      treeRef.current?.expandNode("root");
       newTree = {
         ...fileTree,
         children: [
@@ -397,6 +399,7 @@ function App() {
       };
     } else {
       newTree = processNode(fileTree, selectedNodeId, newNode);
+      treeRef.current?.expandNode(selectedNodeId);
     }
 
     // 更新状态
@@ -413,6 +416,8 @@ function App() {
       { content: newText, isValid: true, error: null }
     );
   };
+
+  const treeRef = useRef<TreeNodeRef>(null);
 
   return (
     <div className="h-screen flex flex-col">
@@ -546,6 +551,13 @@ function App() {
                     <Button
                       size="icon"
                       className="w-8 h-8" // icon 本来是9，调小一点
+                      onClick={() => treeRef.current?.collapseAll()}
+                    >
+                      <ChevronsDownUp />
+                    </Button>
+                    <Button
+                      size="icon"
+                      className="w-8 h-8" // icon 本来是9，调小一点
                       variant="destructive"
                       onClick={deleteNode}
                       disabled={
@@ -558,6 +570,7 @@ function App() {
                   </div>
                   <div className="flex-1 overflow-auto min-h-0">
                     <TreeNodeComponent
+                      ref={treeRef}
                       node={fileTree}
                       onUpdate={updateNode}
                       selectedNodeIds={selectedNodeIds}
