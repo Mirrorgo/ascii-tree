@@ -39,17 +39,6 @@
 
 
 ## 注意
-下面这个解析正常是为了保证 alt+↑↓ 操作的丝滑
-```
-- node
-- node
-    - wrong
-  - node
-  - node
-- node
-  - node
-```
-
 
 # 后续idea
 

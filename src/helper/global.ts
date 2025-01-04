@@ -95,12 +95,12 @@ function validateMarkdownLine(
   line: string,
   lineIndex: number,
   nextLine: string | undefined,
-  siblings: string[] = [] // 当前行的同级节点名称列表
+  siblings: string[] = []
 ): {
   level: number;
   name: string;
 } {
-  // 检查空行
+  // Check for empty line
   const firstNonSpace = line.search(/\S/);
   if (firstNonSpace === -1) {
     throw {
@@ -111,28 +111,30 @@ function validateMarkdownLine(
     } as ParseError;
   }
 
-  // 使用更精确的正则表达式来匹配行格式
+  // Match line format with capturing groups for indentation and content
   const match = line.match(/^(\s*)-(\s+)(.+)$/);
 
   if (!match) {
     const dashIndex = line.indexOf("-");
     if (dashIndex === -1) {
-      // 完全没有破折号的情况
+      // No dash found - report error at first non-space character
       throw {
         type: "Missing Dash",
         message: "Line must start with '-' after indentation",
         line: lineIndex + 1,
+        // Column should be at the position where dash should be
         column: firstNonSpace + 1,
       } as ParseError;
     }
 
-    // 破折号后格式不正确
+    // Check formatting after dash
     const afterDash = line.slice(dashIndex + 1);
     if (!afterDash.startsWith(" ")) {
       throw {
         type: "Missing Space",
         message: "Dash must be followed by a space",
         line: lineIndex + 1,
+        // Column should be right after the dash
         column: dashIndex + 2,
       } as ParseError;
     } else if (!afterDash.slice(1).trim()) {
@@ -140,6 +142,7 @@ function validateMarkdownLine(
         type: "Missing Content",
         message: "List item must have content after '- '",
         line: lineIndex + 1,
+        // Column should be where content should start
         column: dashIndex + 3,
       } as ParseError;
     } else {
@@ -147,6 +150,7 @@ function validateMarkdownLine(
         type: "Invalid Format",
         message: "Invalid line format",
         line: lineIndex + 1,
+        // Column should be at the problematic character
         column: dashIndex + 2,
       } as ParseError;
     }
@@ -154,62 +158,66 @@ function validateMarkdownLine(
 
   const [, indent, spaceAfterDash, content] = match;
 
-  // 检查缩进是否合法
+  // Check indentation
   if (indent.length % 2 !== 0) {
     throw {
       type: "Invalid Indentation",
       message: "Indentation must be multiple of 2 spaces",
       line: lineIndex + 1,
-      column: indent.length + 1,
+      // Column should be at the position where indentation becomes invalid
+      column: indent.length,
     } as ParseError;
   }
 
-  // 检查破折号后的空格是否正确
+  // Check space after dash
   if (spaceAfterDash.length !== 1) {
     throw {
       type: "Invalid Space After Dash",
       message: "Dash must be followed by exactly one space",
       line: lineIndex + 1,
+      // Column should be right after the dash
       column: indent.length + 2,
     } as ParseError;
   }
 
-  // 检查节点名称是否为空
+  // Check for empty node name
   if (!content.trim()) {
     throw {
       type: "Empty Node Name",
       message: "Node name cannot be empty",
       line: lineIndex + 1,
-      column: line.length + 1,
+      // Column should be where content should start
+      column: indent.length + 3,
     } as ParseError;
   }
 
   const nodeName = content.trim();
 
-  // 检查非文件夹节点是否有子节点
+  // Check file node children
   if (!nodeName.endsWith("/")) {
     const currentLevel = indent.length / 2;
     if (nextLine) {
-      // 简单计算下一行的缩进长度，不用正则
       const nextLineIndent = nextLine.search(/\S|$/);
       if (nextLineIndent / 2 > currentLevel) {
         throw {
           type: "Invalid File Node",
           message: "File node cannot have children",
           line: lineIndex + 1,
-          column: nextLineIndent + 1,
+          // Column should be at the end of the current node name
+          column: indent.length + 3 + content.trim().length,
         } as ParseError;
       }
     }
   }
 
-  // 检查重复名称
+  // Check for duplicate names
   if (siblings.includes(nodeName)) {
     throw {
       type: "Duplicate Node Name",
       message: "Node names must be unique at the same level",
       line: lineIndex + 1,
-      column: line.length - nodeName.length + 1,
+      // Column should be at the end of the duplicate name
+      column: indent.length + 3 + content.trim().length,
     } as ParseError;
   }
 
