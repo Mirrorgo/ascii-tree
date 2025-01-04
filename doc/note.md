@@ -125,6 +125,8 @@ TODO
 - add file和add folder的时候需要focus到输入name的位置,然后输入name,并由validate是否为空的ui以及自由配置的validator
   - 之后补上save name的时候的同级重名节点的validator
 - 抽离出复用的validator,目前每个部分validator都是分离的
+- slash之前不能有空格
+- 支持注释
 
 ```
 company-project/              
