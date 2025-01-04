@@ -34,15 +34,15 @@ const generateAscii = (
   return result;
 };
 
-// Parse ASCII tree structure
 function parseAsciiTree(asciiText: string): TreeNode {
   const lines = asciiText.split("\n").filter((line) => line.trim());
 
-  // First line as root node - remove trailing slash if present
+  // First line as root node
   const rootName = lines[0];
   const root: TreeNode = {
     id: generateId(),
     name: rootName,
+    path: rootName,
     children: [],
   };
 
@@ -51,24 +51,31 @@ function parseAsciiTree(asciiText: string): TreeNode {
   ];
 
   lines.slice(1).forEach((line) => {
-    const level = Math.floor(line.search(/[^\s│├└]/) / 4);
+    // 改进层级计算逻辑
+    const indent = line.match(/^[\s│]*(?:├──|└──|)/)?.[0].length || 0;
+    const level = Math.floor(indent / 4); // 每个层级是 4 个字符(├── 或 └── 加空格)
 
-    // Extract node name (remove tree symbols and trailing slash)
-    const name = line.replace(/[│├└─\s]+/, "").trim();
+    // 提取节点名称，去除前缀符号
+    const name = line.replace(/^[\s│]*(├──|└──)\s*/, "").trim();
 
-    // Create new node
-    const newNode: TreeNode = {
-      id: generateId(),
-      name,
-      children: [],
-    };
-
-    // Backtrack stack to find parent node
+    // 回溯堆栈找到正确的父节点
     while (stack.length > 1 && stack[stack.length - 1].level >= level) {
       stack.pop();
     }
 
     const parent = stack[stack.length - 1].node;
+    const path = parent.path.endsWith("/")
+      ? `${parent.path}${name}`
+      : `${parent.path}/${name}`;
+
+    // 创建新节点
+    const newNode: TreeNode = {
+      id: generateId(),
+      name,
+      path,
+      children: [],
+    };
+
     if (!parent.children) parent.children = [];
     parent.children.push(newNode);
 
@@ -79,7 +86,6 @@ function parseAsciiTree(asciiText: string): TreeNode {
 }
 
 function isValidAsciiTree(text: string): boolean {
-  // return true;
   const lines = text.split("\n").filter((line) => line.trim());
   if (lines.length === 0) return false;
 
@@ -93,6 +99,10 @@ function isValidAsciiTree(text: string): boolean {
   ) {
     return false;
   }
+
+  // 用 Map 存储每个缩进级别的节点名称集合
+  const levelNodes = new Map<number, Set<string>>();
+  levelNodes.set(0, new Set([rootLine]));
 
   // 2. Validate subsequent lines
   let lastIndentLevel = 0;
@@ -116,13 +126,33 @@ function isValidAsciiTree(text: string): boolean {
     // Check if indent level change is reasonable
     if (indentLevel > lastIndentLevel + 1) return false;
 
-    // If indent decreases, update indent stack
+    // If indent decreases, update indent stack and clear higher level nodes
     while (
       indentStack.length > 0 &&
       indentLevel < indentStack[indentStack.length - 1]
     ) {
-      indentStack.pop();
+      const poppedLevel = indentStack.pop()!;
+      // 清理更高层级的节点集合
+      for (let level = poppedLevel; level > indentLevel; level--) {
+        levelNodes.delete(level);
+      }
     }
+
+    // Extract node name
+    const nodeName = line
+      .substring(indent)
+      .replace(/(├──|└──)\s*/, "")
+      .trim();
+
+    // Check for duplicate names at the same level
+    if (!levelNodes.has(indentLevel)) {
+      levelNodes.set(indentLevel, new Set());
+    }
+    const currentLevelNodes = levelNodes.get(indentLevel)!;
+    if (currentLevelNodes.has(nodeName)) {
+      return false; // 发现重复名称
+    }
+    currentLevelNodes.add(nodeName);
 
     // Check vertical line positions
     const prefixPart = line.substring(0, indent);

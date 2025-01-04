@@ -30,11 +30,19 @@ function getNodesBetween(
   return allIds.slice(start, end + 1);
 }
 
-const createNode = (name: string, isFolder: boolean): TreeNode => ({
-  id: generateId(),
-  name,
-  ...(isFolder ? { children: [] } : {}),
-});
+const createNode = (
+  name: string,
+  isFolder: boolean,
+  parentPath: string = ""
+): TreeNode => {
+  const path = parentPath ? `${parentPath}/${name}` : name;
+  return {
+    id: generateId(),
+    name,
+    path,
+    ...(isFolder ? { children: [] } : {}),
+  };
+};
 
 // 处理树节点的通用函数
 const processNode = (

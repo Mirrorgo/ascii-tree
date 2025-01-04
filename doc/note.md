@@ -128,9 +128,14 @@ company-project/              # 公司总项目目录
       ├── package.json     # antd项目的依赖
       └── src/
 ```
+
+
 TODO
-- md view 编辑有 / 结尾但是存在children的时候报错
+- md view 编辑有 / 结尾但是存在children的时候报错 ✅
 - 一个专门的维修函数在各种保存结尾check和修复
+- add file和add folder的时候需要focus到输入name的位置,然后输入name,并由validate是否为空的ui以及自由配置的validator
+  - 之后补上save name的时候的同级重名节点的validator
+- 抽离出复用的validator,目前每个部分validator都是分离的
 
 ```
 company-project/              

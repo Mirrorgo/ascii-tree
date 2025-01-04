@@ -11,7 +11,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { TextEditorRef } from "./components/mg/markdown-editor/text-editor";
-import { generateId, markdownToTree, treeToMarkdown } from "./helper/global";
+import { markdownToTree, treeToMarkdown } from "./helper/global";
 import { createNode, getNodesBetween, processNode } from "./helper/explorer";
 import {
   generateAscii,
@@ -76,7 +76,7 @@ function App() {
       error: null,
     });
 
-    const { tree, error } = markdownToTree(value);
+    const { tree: newTree, error } = markdownToTree(value, fileTree); // 传入当前的 fileTree
     if (error) {
       setTextState((prev) => ({
         ...prev,
@@ -84,8 +84,7 @@ function App() {
         error,
       }));
       setIsTreeLocked(true);
-    } else if (tree) {
-      const newTree = { ...tree, id: fileTree.id };
+    } else if (newTree) {
       setFileTree(newTree);
       setIsTreeLocked(false);
 
@@ -336,22 +335,32 @@ function App() {
     if (selectedNodeIds.length > 1) return;
 
     const selectedNodeId = selectedNodeIds[0];
-    const newNode = createNode(fileName, false);
+    let parentPath = "";
+
+    // 确定父路径
+    if (selectedNodeId && selectedNodeId !== "root") {
+      const selectedNode = findNodeById(fileTree, selectedNodeId);
+      if (selectedNode) {
+        parentPath = selectedNode.name.endsWith("/")
+          ? selectedNode.path
+          : getParentPath(selectedNode.path);
+      }
+    } else {
+      parentPath = fileTree.path;
+    }
+
+    const newNode = createNode(fileName, false, parentPath);
     let newTree: TreeNode;
 
     // 如果没有选中节点,或选中的是根节点
     if (!selectedNodeId || selectedNodeId === "root") {
+      treeRef.current?.expandNode("root");
       newTree = {
         ...fileTree,
-        children: [
-          ...(fileTree.children || []),
-          {
-            id: generateId(),
-            name: fileName,
-          },
-        ],
+        children: [...(fileTree.children || []), newNode],
       };
     } else {
+      treeRef.current?.expandNode(selectedNodeId);
       newTree = processNode(fileTree, selectedNodeId, newNode);
     }
 
@@ -380,7 +389,21 @@ function App() {
       folderName += "/";
     }
 
-    const newNode = createNode(folderName, true);
+    let parentPath = "";
+
+    // 确定父路径
+    if (selectedNodeId && selectedNodeId !== "root") {
+      const selectedNode = findNodeById(fileTree, selectedNodeId);
+      if (selectedNode) {
+        parentPath = selectedNode.name.endsWith("/")
+          ? selectedNode.path
+          : getParentPath(selectedNode.path);
+      }
+    } else {
+      parentPath = fileTree.path;
+    }
+
+    const newNode = createNode(folderName, true, parentPath);
     let newTree: TreeNode;
 
     // 如果没有选中节点,或选中的是根节点
@@ -388,14 +411,7 @@ function App() {
       treeRef.current?.expandNode("root");
       newTree = {
         ...fileTree,
-        children: [
-          ...(fileTree.children || []),
-          {
-            id: generateId(),
-            name: folderName,
-            children: [],
-          },
-        ],
+        children: [...(fileTree.children || []), newNode],
       };
     } else {
       newTree = processNode(fileTree, selectedNodeId, newNode);
@@ -610,3 +626,21 @@ function App() {
 }
 
 export default App;
+
+// 添加辅助函数
+const findNodeById = (tree: TreeNode, id: string): TreeNode | null => {
+  if (tree.id === id) return tree;
+  if (!tree.children) return null;
+
+  for (const child of tree.children) {
+    const found = findNodeById(child, id);
+    if (found) return found;
+  }
+
+  return null;
+};
+
+const getParentPath = (path: string): string => {
+  const parts = path.split("/");
+  return parts.slice(0, -1).join("/");
+};

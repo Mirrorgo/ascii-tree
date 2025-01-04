@@ -44,7 +44,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
           onChange={onChange}
           className="w-full flex-1"
         />
-        <div className="h-20">
+        <div className="h-20 overflow-auto mb-1">
           {!textState.isValid && textState.error && (
             <Alert
               variant="destructive"

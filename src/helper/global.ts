@@ -1,10 +1,76 @@
-import { MarkdownParseError, TreeNode } from "@/typings";
+import { MarkdownParseError, ParsedNode, TreeNode } from "@/typings";
 
 interface ParseError {
   type: string;
   message: string;
   line: number;
   column: number;
+}
+
+function generateNodePath(parentPath: string, name: string): string {
+  return parentPath ? `${parentPath}/${name}` : name;
+}
+
+function parseMarkdownToNodes(text: string): ParsedNode {
+  const lines = text.split("\n").filter((line) => line.trim());
+  const root: ParsedNode = { name: "", path: "", children: [] };
+  const stack: { node: ParsedNode; level: number }[] = [
+    { node: root, level: -1 },
+  ];
+
+  lines.forEach((line, lineIndex) => {
+    const nextLine = lines[lineIndex + 1];
+
+    // 先计算当前行的缩进级别
+    const match = line.match(/^(\s*)-\s+(.+)$/);
+    const level = match ? match[1].length / 2 : 0;
+
+    // 找到应该比较的同级节点所在的父节点
+    let compareLevel = stack.length - 1;
+    while (compareLevel > 0 && stack[compareLevel].level >= level) {
+      compareLevel--;
+    }
+    const siblingParent = stack[compareLevel].node;
+    const siblingsNames = (siblingParent.children || []).map(
+      (node) => node.name
+    );
+
+    // 进行校验
+    const validationResult = validateMarkdownLine(
+      line,
+      lineIndex,
+      nextLine,
+      siblingsNames
+    );
+
+    // 校验通过后再调整栈
+    while (stack.length > 1 && stack[stack.length - 1].level >= level) {
+      stack.pop();
+    }
+
+    const parent = stack[stack.length - 1].node;
+    const path = generateNodePath(parent.path, validationResult.name);
+    const newNode: ParsedNode = {
+      name: validationResult.name,
+      path,
+      children: [],
+    };
+
+    if (!parent.children) parent.children = [];
+    parent.children.push(newNode);
+    stack.push({ node: newNode, level });
+  });
+
+  if (!root.children || root.children.length === 0) {
+    throw {
+      type: "Empty Tree",
+      message: "Tree must have at least one node",
+      line: 1,
+      column: 1,
+    };
+  }
+
+  return root.children[0];
 }
 
 function generateId() {
@@ -28,7 +94,8 @@ function treeToMarkdown(node: TreeNode, level = 0): string {
 function validateMarkdownLine(
   line: string,
   lineIndex: number,
-  nextLine: string | undefined
+  nextLine: string | undefined,
+  siblings: string[] = [] // 当前行的同级节点名称列表
 ): {
   level: number;
   name: string;
@@ -136,73 +203,62 @@ function validateMarkdownLine(
     }
   }
 
+  // 检查重复名称
+  if (siblings.includes(nodeName)) {
+    throw {
+      type: "Duplicate Node Name",
+      message: "Node names must be unique at the same level",
+      line: lineIndex + 1,
+      column: line.length - nodeName.length + 1,
+    } as ParseError;
+  }
+
   return {
     level: indent.length / 2,
     name: content.trim(),
   };
 }
 
-function markdownToTree(text: string): {
-  tree: TreeNode | null;
-  error: MarkdownParseError | null;
-} {
+function markdownToTree(
+  text: string,
+  existingTree: TreeNode | null = null
+): { tree: TreeNode | null; error: MarkdownParseError | null } {
   try {
-    const lines = text.split("\n").filter((line) => line.trim());
-    const tempRoot: TreeNode = { id: "root", name: "root", children: [] };
-    const stack: { node: TreeNode; level: number }[] = [
-      { node: tempRoot, level: -1 },
-    ];
+    const parsedRoot = parseMarkdownToNodes(text);
 
-    lines.forEach((line, lineIndex) => {
-      // 使用验证函数检查行格式, 抛出的异常会被捕获并显示在界面上
-      const nextLine = lines[lineIndex + 1];
-      const { level, name } = validateMarkdownLine(line, lineIndex, nextLine);
-
-      // 验证缩进层级关系
-      if (stack.length > 0) {
-        const parentLevel = stack[stack.length - 1].level;
-        if (level > parentLevel + 1) {
-          throw {
-            type: "Invalid Indentation Level",
-            message: "Can only indent one level at a time",
-            line: lineIndex + 1,
-            column: level * 2 + 1,
-          } as ParseError;
-        }
+    function updateNode(
+      parsedNode: ParsedNode,
+      existing: TreeNode | null
+    ): TreeNode {
+      if (existing && existing.path === parsedNode.path) {
+        // 节点已存在，更新名称但保留 ID
+        return {
+          ...existing,
+          name: parsedNode.name,
+          path: parsedNode.path,
+          children: parsedNode.children?.map((child) => {
+            const existingChild = existing.children?.find(
+              (ec) => ec.path === child.path
+            );
+            // 将 undefined 转换为 null
+            return updateNode(child, existingChild || null);
+          }),
+        };
+      } else {
+        // 新节点，生成新的 ID
+        return {
+          id: generateId(),
+          name: parsedNode.name,
+          path: parsedNode.path,
+          children: parsedNode.children?.map((child) =>
+            updateNode(child, null)
+          ),
+        };
       }
-
-      // 处理节点层级关系
-      while (stack.length > 1 && stack[stack.length - 1].level >= level) {
-        stack.pop();
-      }
-
-      // 创建新节点
-      const newNode: TreeNode = {
-        id: generateId(),
-        name,
-        children: [],
-      };
-
-      // 添加到父节点
-      const parent = stack[stack.length - 1].node;
-      if (!parent.children) parent.children = [];
-      parent.children.push(newNode);
-      stack.push({ node: newNode, level });
-    });
-
-    // 返回最终的树结构
-    if (tempRoot.children && tempRoot.children.length === 1) {
-      return { tree: tempRoot.children[0], error: null };
-    } else {
-      return {
-        tree: {
-          id: "root",
-          name: "root",
-          children: tempRoot.children,
-        },
-        error: null,
-      };
     }
+
+    const updatedTree = updateNode(parsedRoot, existingTree);
+    return { tree: updatedTree, error: null };
   } catch (error) {
     const parseError = error as ParseError;
     return {
