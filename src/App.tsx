@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Github, Redo2, Settings, Trash2, Undo2 } from "lucide-react";
+import {
+  FilePlus,
+  FolderPlus,
+  Github,
+  Redo2,
+  Settings,
+  Trash2,
+  Undo2,
+} from "lucide-react";
 import { TextEditorRef } from "./components/mg/markdown-editor/text-editor";
 import { generateId, markdownToTree, treeToMarkdown } from "./helper/global";
-import { getNodesBetween } from "./helper/explorer";
+import { createNode, getNodesBetween, processNode } from "./helper/explorer";
 import {
   generateAscii,
   isValidAsciiTree,
@@ -101,109 +109,6 @@ function App() {
     }
   }, [redo]);
 
-  const addChildNode = () => {
-    if (selectedNodeIds.length > 1) return;
-
-    let newTree: TreeNode;
-    if (selectedNodeIds.length === 0) {
-      const newNode: TreeNode = {
-        id: generateId(),
-        name: "New Node",
-      };
-      newTree = {
-        ...fileTree,
-        children: [...(fileTree.children || []), newNode],
-      };
-    } else {
-      const addNodeToParent = (node: TreeNode): TreeNode => {
-        if (node.id === selectedNodeIds[0]) {
-          return {
-            ...node,
-            children: [
-              ...(node.children || []),
-              {
-                id: generateId(),
-                name: "New Node",
-              },
-            ],
-          };
-        }
-        if (node.children) {
-          return {
-            ...node,
-            children: node.children.map(addNodeToParent),
-          };
-        }
-        return node;
-      };
-      newTree = addNodeToParent(fileTree);
-    }
-
-    setFileTree(newTree);
-    const newText = treeToMarkdown(newTree);
-    setTextState({
-      content: newText,
-      isValid: true,
-      error: null,
-    });
-
-    addToHistory(
-      { tree: newTree, selectedNodeIds, lastSelectedId },
-      { content: newText, isValid: true, error: null }
-    );
-  };
-
-  const addSiblingNode = () => {
-    if (selectedNodeIds.length > 1) return;
-    if (selectedNodeIds.length === 0) return;
-
-    const selectedNodeId = selectedNodeIds[0];
-    if (!selectedNodeId || selectedNodeId === "root") return;
-
-    const addSibling = (node: TreeNode): TreeNode => {
-      if (node.children?.some((child) => child.id === selectedNodeId)) {
-        return {
-          ...node,
-          children: [
-            ...node.children,
-            {
-              id: generateId(),
-              name: "New Node",
-            },
-          ],
-        };
-      }
-      if (node.children) {
-        return {
-          ...node,
-          children: node.children.map(addSibling),
-        };
-      }
-      return node;
-    };
-
-    const newTree = addSibling(fileTree);
-    setFileTree(newTree);
-
-    const newText = treeToMarkdown(newTree);
-    console.log("new text", newText);
-
-    setTextState({
-      content: newText,
-      isValid: true,
-      error: null,
-    });
-
-    addToHistory(
-      { tree: newTree, selectedNodeIds, lastSelectedId },
-      {
-        content: newText,
-        isValid: true,
-
-        error: null,
-      }
-    );
-  };
   const deleteNode = () => {
     if (selectedNodeIds.includes("root")) return;
     if (selectedNodeIds.length === 0) return;
@@ -426,6 +331,89 @@ function App() {
     );
   }
 
+  const handleAddFile = (fileName: string = "New File") => {
+    if (selectedNodeIds.length > 1) return;
+
+    const selectedNodeId = selectedNodeIds[0];
+    const newNode = createNode(fileName, false);
+    let newTree: TreeNode;
+
+    // 如果没有选中节点,或选中的是根节点
+    if (!selectedNodeId || selectedNodeId === "root") {
+      newTree = {
+        ...fileTree,
+        children: [
+          ...(fileTree.children || []),
+          {
+            id: generateId(),
+            name: fileName,
+          },
+        ],
+      };
+    } else {
+      newTree = processNode(fileTree, selectedNodeId, newNode);
+    }
+
+    // 更新状态
+    setFileTree(newTree);
+    const newText = treeToMarkdown(newTree);
+    setTextState({
+      content: newText,
+      isValid: true,
+      error: null,
+    });
+
+    addToHistory(
+      { tree: newTree, selectedNodeIds, lastSelectedId },
+      { content: newText, isValid: true, error: null }
+    );
+  };
+
+  const handleAddFolder = (folderName: string = "New Folder/") => {
+    if (selectedNodeIds.length > 1) return;
+
+    const selectedNodeId = selectedNodeIds[0];
+
+    // 确保文件夹名称以 / 结尾
+    if (!folderName.endsWith("/")) {
+      folderName += "/";
+    }
+
+    const newNode = createNode(folderName, true);
+    let newTree: TreeNode;
+
+    // 如果没有选中节点,或选中的是根节点
+    if (!selectedNodeId || selectedNodeId === "root") {
+      newTree = {
+        ...fileTree,
+        children: [
+          ...(fileTree.children || []),
+          {
+            id: generateId(),
+            name: folderName,
+            children: [],
+          },
+        ],
+      };
+    } else {
+      newTree = processNode(fileTree, selectedNodeId, newNode);
+    }
+
+    // 更新状态
+    setFileTree(newTree);
+    const newText = treeToMarkdown(newTree);
+    setTextState({
+      content: newText,
+      isValid: true,
+      error: null,
+    });
+
+    addToHistory(
+      { tree: newTree, selectedNodeIds, lastSelectedId },
+      { content: newText, isValid: true, error: null }
+    );
+  };
+
   return (
     <div className="h-screen flex flex-col">
       <div className="w-full border-b px-2 mt-2 mb-2">
@@ -523,7 +511,6 @@ function App() {
         </div>
       </div>
       {/* main */}
-
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel
           defaultSize={defaultSize}
@@ -541,21 +528,20 @@ function App() {
                 >
                   <div className="flex gap-2 justify-center">
                     <Button
-                      size="sm"
-                      onClick={addChildNode}
-                      disabled={selectedNodeIds.length > 1}
+                      size="icon"
+                      className="w-8 h-8" // icon 本来是9，调小一点
+                      onClick={() => handleAddFile()}
+                      // disabled={selectedNodeIds.length !== 1}
                     >
-                      Add Child
+                      <FilePlus />
                     </Button>
                     <Button
-                      size="sm"
-                      onClick={addSiblingNode}
-                      disabled={
-                        selectedNodeIds.length !== 1 ||
-                        selectedNodeIds.includes("root")
-                      }
+                      size="icon"
+                      className="w-8 h-8" // icon 本来是9，调小一点
+                      onClick={() => handleAddFolder()}
+                      // disabled={selectedNodeIds.length !== 1}
                     >
-                      Add Sibling
+                      <FolderPlus />
                     </Button>
                     <Button
                       size="icon"

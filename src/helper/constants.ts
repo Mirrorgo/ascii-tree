@@ -1,24 +1,24 @@
 import { TreeNode } from "@/typings";
 
-const BASIC_ASCII_TREE_TEMPLATE = `root
-├── folder1
+const BASIC_ASCII_TREE_TEMPLATE = `root/
+├── folder1/
 │   ├── file1
 │   └── file2
-└── folder2
+└── folder2/
     ├── file3
     └── file4`;
 
-const VITE_REACT_TEMPLATE = `vite-react
-├── public
+const VITE_REACT_TEMPLATE = `vite-react/
+├── public/
 │   └── vite.svg
-├── src
-│   ├── assets
-│   ├── components
-│   │   ├── ui
-│   │   └── shared
-│   ├── hooks
-│   ├── pages
-│   ├── styles
+├── src/
+│   ├── assets/
+│   ├── components/
+│   │   ├── ui/
+│   │   └── shared/
+│   ├── hooks/
+│   ├── pages/
+│   ├── styles/
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── vite-env.d.ts
@@ -30,15 +30,15 @@ const VITE_REACT_TEMPLATE = `vite-react
 ├── tsconfig.node.json
 └── vite.config.ts`;
 
-const VITE_VUE_TEMPLATE = `vite-vue
-├── public
+const VITE_VUE_TEMPLATE = `vite-vue/
+├── public/
 │   └── vite.svg
-├── src
-│   ├── assets
-│   ├── components
-│   ├── composables
-│   ├── stores
-│   ├── views
+├── src/
+│   ├── assets/
+│   ├── components/
+│   ├── composables/
+│   ├── stores/
+│   ├── views/
 │   ├── App.vue
 │   ├── main.ts
 │   └── vite-env.d.ts
@@ -51,26 +51,26 @@ const VITE_VUE_TEMPLATE = `vite-vue
 ├── vite.config.ts
 └── env.d.ts`;
 
-const NEXTJS_APP_TEMPLATE = `next-app-dir
-├── app
-│   ├── (auth)
-│   │   ├── login
+const NEXTJS_APP_TEMPLATE = `next-app-dir/
+├── app/
+│   ├── (auth)/
+│   │   ├── login/
 │   │   │   └── page.tsx
 │   │   └── layout.tsx
-│   ├── api
+│   ├── api/
 │   │   └── route.ts
 │   ├── layout.tsx
 │   ├── page.tsx
 │   └── globals.css
-├── components
-│   ├── ui
-│   └── shared
-├── lib
+├── components/
+│   ├── ui/
+│   └── shared/
+├── lib/
 │   ├── utils.ts
 │   └── db.ts
-├── public
-│   ├── images
-│   └── fonts
+├── public/
+│   ├── images/
+│   └── fonts/
 ├── .env
 ├── next.config.js
 ├── package.json
@@ -78,23 +78,23 @@ const NEXTJS_APP_TEMPLATE = `next-app-dir
 ├── tailwind.config.ts
 └── tsconfig.json`;
 
-const NEXTJS_PAGES_TEMPLATE = `next-pages-dir
-├── pages
-│   ├── api
+const NEXTJS_PAGES_TEMPLATE = `next-pages-dir/
+├── pages/
+│   ├── api/
 │   │   └── hello.ts
 │   ├── _app.tsx
 │   ├── _document.tsx
 │   └── index.tsx
-├── components
-│   ├── ui
-│   └── shared
-├── lib
+├── components/
+│   ├── ui/
+│   └── shared/
+├── lib/
 │   ├── utils.ts
 │   └── db.ts
-├── public
-│   ├── images
-│   └── fonts
-├── styles
+├── public/
+│   ├── images/
+│   └── fonts/
+├── styles/
 │   └── globals.css
 ├── .env
 ├── next.config.js
@@ -103,26 +103,26 @@ const NEXTJS_PAGES_TEMPLATE = `next-pages-dir
 ├── tailwind.config.ts
 └── tsconfig.json`;
 
-const T3_APP_TEMPLATE = `t3-app
-├── prisma
+const T3_APP_TEMPLATE = `t3-app/
+├── prisma/
 │   └── schema.prisma
-├── src
+├── src/
 │   ├── env.js
 │   ├── env.mjs
-│   ├── server
-│   │   ├── api
-│   │   │   └── routers
+│   ├── server/
+│   │   ├── api/
+│   │   │   └── routers/
 │   │   │       ├── post.ts
 │   │   │       └── user.ts
 │   │   ├── auth.ts
 │   │   ├── db.ts
 │   │   └── trpc.ts
-│   ├── styles
+│   ├── styles/
 │   │   └── globals.css
-│   ├── app
+│   ├── app/
 │   │   ├── layout.tsx
 │   │   └── page.tsx
-│   └── utils
+│   └── utils/
 │       └── api.ts
 ├── .env
 ├── next.config.mjs
@@ -131,79 +131,79 @@ const T3_APP_TEMPLATE = `t3-app
 ├── tailwind.config.ts
 └── tsconfig.json`;
 
-const MONOREPO_TEMPLATE = `monorepo
-├── apps
-│   ├── web
-│   │   ├── src
+const MONOREPO_TEMPLATE = `monorepo/
+├── apps/
+│   ├── web/
+│   │   ├── src/
 │   │   ├── package.json
 │   │   └── tsconfig.json
-│   └── docs
-│       ├── src
+│   └── docs/
+│       ├── src/
 │       ├── package.json
 │       └── tsconfig.json
-├── packages
-│   ├── ui
-│   │   ├── src
+├── packages/
+│   ├── ui/
+│   │   ├── src/
 │   │   ├── package.json
 │   │   └── tsconfig.json
-│   ├── config
-│   │   ├── eslint
-│   │   └── typescript
-│   └── utils
-│       ├── src
+│   ├── config/
+│   │   ├── eslint/
+│   │   └── typescript/
+│   └── utils/
+│       ├── src/
 │       └── package.json
 ├── package.json
 ├── turbo.json
 └── pnpm-workspace.yaml`;
 
-const REMIX_TEMPLATE = `remix-app
-├── app
-│   ├── routes
+const REMIX_TEMPLATE = `remix-app/
+├── app/
+│   ├── routes/
 │   │   ├── _index.tsx
-│   │   └── blog
+│   │   └── blog/
 │   │       ├── $slug.tsx
 │   │       └── index.tsx
-│   ├── styles
+│   ├── styles/
 │   │   └── global.css
-│   ├── utils
+│   ├── utils/
 │   ├── root.tsx
 │   └── entry.client.tsx
-├── public
-│   └── assets
+├── public/
+│   └── assets/
 ├── .env
 ├── package.json
 ├── remix.config.js
 └── tsconfig.json`;
 
-const ASTRO_TEMPLATE = `astro-site
-├── src
-│   ├── components
+const ASTRO_TEMPLATE = `astro-site/
+├── src/
+│   ├── components/
 │   │   └── Card.astro
-│   ├── layouts
+│   ├── layouts/
 │   │   └── Layout.astro
-│   ├── pages
+│   ├── pages/
 │   │   └── index.astro
-│   └── content
-│       ├── blog
+│   └── content/
+│       ├── blog/
 │       └── config.ts
-├── public
-│   └── assets
+├── public/
+│   └── assets/
 ├── astro.config.mjs
 ├── package.json
 ├── tailwind.config.mjs
 └── tsconfig.json`;
 
-const SVELTEKIT_TEMPLATE = `sveltekit-app
-├── src
-│   ├── lib
-│   │   ├── server
-│   │   └── components
-│   ├── routes
+const SVELTEKIT_TEMPLATE = `sveltekit-app/
+├── src/
+│   ├── lib/
+│   │   ├── server/
+│   │   └── components/
+│   ├── routes/
 │   │   ├── +layout.svelte
 │   │   └── +page.svelte
 │   └── app.html
-├── static
-├── tests
+├── static/
+├── tests/
 ├── .env
 ├── package.json
 ├── svelte.config.js
@@ -255,11 +255,11 @@ const PROJECT_TEMPLATES = {
 
 const INITIAL_TREE: TreeNode = {
   id: "root",
-  name: "root",
+  name: "root/",
   children: [
     {
       id: "1",
-      name: "folder1",
+      name: "folder1/",
       children: [
         {
           id: "2",
@@ -273,7 +273,7 @@ const INITIAL_TREE: TreeNode = {
     },
     {
       id: "4",
-      name: "folder2",
+      name: "folder2/",
       children: [
         {
           id: "5",

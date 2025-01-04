@@ -34,6 +34,7 @@ const TreeNodeComponent = ({
   const [isEditing, setIsEditing] = useState(false);
   const hasChildren = node.children && node.children.length > 0;
   const isSelected = selectedNodeIds.includes(node.id);
+  const isFolder = node.name.endsWith("/");
 
   const handleNodeClick = (e: React.MouseEvent) => {
     if (disabled) return;
@@ -51,6 +52,10 @@ const TreeNodeComponent = ({
   };
 
   const saveEdit = (e: FocusEvent<HTMLInputElement>) => {
+    if (!isFolder && hasChildren) {
+      // should be a folder but not a folder: add trailing slash
+      e.target.value = e.target.value + "/";
+    }
     onUpdate(node.id, e.target.value);
     setIsEditing(false);
   };
@@ -64,7 +69,7 @@ const TreeNodeComponent = ({
         style={{ paddingLeft: `${level * 16}px` }}
         onClick={handleNodeClick}
       >
-        {hasChildren ? (
+        {isFolder ? (
           <>
             {isOpen ? (
               <ChevronDown className="w-4 h-4 mr-1" />
@@ -91,9 +96,11 @@ const TreeNodeComponent = ({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="truncate flex-1">{node.name}</span>
+                <span className="truncate flex-1">
+                  {removeTrailingSlash(node.name)}
+                </span>
               </TooltipTrigger>
-              <TooltipContent>{node.name}</TooltipContent>
+              <TooltipContent>{removeTrailingSlash(node.name)}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}
@@ -122,3 +129,5 @@ const TreeNodeComponent = ({
 };
 
 export default TreeNodeComponent;
+
+const removeTrailingSlash = (str: string) => str.replace(/\/$/, "");

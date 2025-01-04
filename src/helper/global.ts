@@ -24,10 +24,11 @@ function treeToMarkdown(node: TreeNode, level = 0): string {
   return result;
 }
 
-// 专门用于验证行格式的函数
-function validateLineFormat(
+// 专门用于验证行格式的函数, 出现错误时抛出异常
+function validateMarkdownLine(
   line: string,
-  lineIndex: number
+  lineIndex: number,
+  allLines: string[]
 ): {
   level: number;
   name: string;
@@ -116,6 +117,26 @@ function validateLineFormat(
     } as ParseError;
   }
 
+  const nodeName = content.trim();
+
+  // 检查非文件夹节点是否有子节点
+  if (!nodeName.endsWith("/")) {
+    // 如果不是文件夹
+    const currentLevel = indent.length / 2;
+    const nextLine = allLines[lineIndex + 1];
+    if (nextLine) {
+      const nextLineIndent = nextLine.match(/^\s*/)?.[0].length ?? 0;
+      if (nextLineIndent / 2 > currentLevel) {
+        throw {
+          type: "Invalid File Node",
+          message: "File node cannot have children",
+          line: lineIndex + 1,
+          column: nextLineIndent + 1,
+        } as ParseError;
+      }
+    }
+  }
+
   return {
     level: indent.length / 2,
     name: content.trim(),
@@ -134,8 +155,8 @@ function markdownToTree(text: string): {
     ];
 
     lines.forEach((line, lineIndex) => {
-      // 使用验证函数检查行格式
-      const { level, name } = validateLineFormat(line, lineIndex);
+      // 使用验证函数检查行格式, 抛出的异常会被捕获并显示在界面上
+      const { level, name } = validateMarkdownLine(line, lineIndex, lines);
 
       // 验证缩进层级关系
       if (stack.length > 0) {

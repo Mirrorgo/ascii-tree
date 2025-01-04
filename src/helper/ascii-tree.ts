@@ -39,7 +39,7 @@ function parseAsciiTree(asciiText: string): TreeNode {
   const lines = asciiText.split("\n").filter((line) => line.trim());
 
   // First line as root node - remove trailing slash if present
-  const rootName = lines[0].trim().replace(/\/$/, "");
+  const rootName = lines[0];
   const root: TreeNode = {
     id: generateId(),
     name: rootName,
@@ -54,10 +54,7 @@ function parseAsciiTree(asciiText: string): TreeNode {
     const level = Math.floor(line.search(/[^\s│├└]/) / 4);
 
     // Extract node name (remove tree symbols and trailing slash)
-    const name = line
-      .replace(/[│├└─\s]+/, "")
-      .trim()
-      .replace(/\/$/, ""); // Remove trailing slash using regex
+    const name = line.replace(/[│├└─\s]+/, "").trim();
 
     // Create new node
     const newNode: TreeNode = {
@@ -82,6 +79,7 @@ function parseAsciiTree(asciiText: string): TreeNode {
 }
 
 function isValidAsciiTree(text: string): boolean {
+  // return true;
   const lines = text.split("\n").filter((line) => line.trim());
   if (lines.length === 0) return false;
 
