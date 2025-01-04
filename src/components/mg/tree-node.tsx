@@ -30,7 +30,7 @@ const TreeNodeComponent = ({
   onSelectNode: (id: string, ctrlKey: boolean, shiftKey: boolean) => void;
   disabled?: boolean;
 }) => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const hasChildren = node.children && node.children.length > 0;
   const isSelected = selectedNodeIds.includes(node.id);
@@ -40,8 +40,8 @@ const TreeNodeComponent = ({
     if (disabled) return;
     e.stopPropagation();
     onSelectNode?.(node.id, e.ctrlKey, e.shiftKey);
-    if (hasChildren && !e.ctrlKey && !e.shiftKey) {
-      setIsOpen(!isOpen);
+    if (isFolder && !e.ctrlKey && !e.shiftKey) {
+      setIsCollapsed(!isCollapsed);
     }
   };
 
@@ -71,7 +71,7 @@ const TreeNodeComponent = ({
       >
         {isFolder ? (
           <>
-            {isOpen ? (
+            {!isCollapsed ? (
               <ChevronDown className="w-4 h-4 mr-1" />
             ) : (
               <ChevronRight className="w-4 h-4 mr-1" />
@@ -110,7 +110,7 @@ const TreeNodeComponent = ({
         />
       </div>
 
-      {hasChildren && isOpen && (
+      {hasChildren && !isCollapsed && (
         <div>
           {node.children!.map((child) => (
             <TreeNodeComponent
