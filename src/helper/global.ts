@@ -28,7 +28,7 @@ function treeToMarkdown(node: TreeNode, level = 0): string {
 function validateMarkdownLine(
   line: string,
   lineIndex: number,
-  allLines: string[]
+  nextLine: string | undefined
 ): {
   level: number;
   name: string;
@@ -121,11 +121,10 @@ function validateMarkdownLine(
 
   // 检查非文件夹节点是否有子节点
   if (!nodeName.endsWith("/")) {
-    // 如果不是文件夹
     const currentLevel = indent.length / 2;
-    const nextLine = allLines[lineIndex + 1];
     if (nextLine) {
-      const nextLineIndent = nextLine.match(/^\s*/)?.[0].length ?? 0;
+      // 简单计算下一行的缩进长度，不用正则
+      const nextLineIndent = nextLine.search(/\S|$/);
       if (nextLineIndent / 2 > currentLevel) {
         throw {
           type: "Invalid File Node",
@@ -156,7 +155,8 @@ function markdownToTree(text: string): {
 
     lines.forEach((line, lineIndex) => {
       // 使用验证函数检查行格式, 抛出的异常会被捕获并显示在界面上
-      const { level, name } = validateMarkdownLine(line, lineIndex, lines);
+      const nextLine = lines[lineIndex + 1];
+      const { level, name } = validateMarkdownLine(line, lineIndex, nextLine);
 
       // 验证缩进层级关系
       if (stack.length > 0) {
