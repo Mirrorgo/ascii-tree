@@ -70,7 +70,7 @@ src/
 
 ## License
 
-[MIT License](LICENSE) © 2024 Mirrorgo
+[MIT License](LICENSE) © 2025 Mirrorgo
 
 ---
 
