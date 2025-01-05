@@ -7,8 +7,12 @@ interface ParseError {
   column: number;
 }
 
+const isRoot = (fileTree: TreeNode, id: string): boolean => {
+  return fileTree.id === id;
+};
+
 function generateNodePath(parentPath: string, name: string): string {
-  return parentPath ? `${parentPath}/${name}` : name;
+  return parentPath ? `${parentPath}${name}` : name;
 }
 
 function parseMarkdownToNodes(text: string): ParsedNode {
@@ -284,4 +288,4 @@ function markdownToTree(
   }
 }
 
-export { generateId, treeToMarkdown, markdownToTree };
+export { generateId, treeToMarkdown, markdownToTree, isRoot };

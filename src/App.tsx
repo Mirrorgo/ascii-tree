@@ -11,7 +11,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { TextEditorRef } from "./components/mg/markdown-editor/text-editor";
-import { markdownToTree, treeToMarkdown } from "./helper/global";
+import { isRoot, markdownToTree, treeToMarkdown } from "./helper/global";
 import { createNode, getNodesBetween, processNode } from "./helper/explorer";
 import {
   generateAscii,
@@ -110,8 +110,8 @@ function App() {
   }, [redo]);
 
   const deleteNode = () => {
-    if (selectedNodeIds.includes("root")) return;
-    if (selectedNodeIds.length === 0) return;
+    if (selectedNodeIds.length === 0 || isRoot(fileTree, selectedNodeIds[0]))
+      return;
 
     const removeNodes = (node: TreeNode): TreeNode => {
       if (node.children) {
@@ -338,7 +338,7 @@ function App() {
     let parentPath = "";
 
     // 确定父路径
-    if (selectedNodeId && selectedNodeId !== "root") {
+    if (selectedNodeId && !isRoot(fileTree, selectedNodeId)) {
       const selectedNode = findNodeById(fileTree, selectedNodeId);
       if (selectedNode) {
         parentPath = selectedNode.name.endsWith("/")
@@ -353,8 +353,8 @@ function App() {
     let newTree: TreeNode;
 
     // 如果没有选中节点,或选中的是根节点
-    if (!selectedNodeId || selectedNodeId === "root") {
-      treeRef.current?.expandNode("root");
+    if (!selectedNodeId || isRoot(fileTree, selectedNodeId)) {
+      treeRef.current?.expandNode(fileTree.id);
       newTree = {
         ...fileTree,
         children: [...(fileTree.children || []), newNode],
@@ -392,7 +392,7 @@ function App() {
     let parentPath = "";
 
     // 确定父路径
-    if (selectedNodeId && selectedNodeId !== "root") {
+    if (selectedNodeId && !isRoot(fileTree, selectedNodeId)) {
       const selectedNode = findNodeById(fileTree, selectedNodeId);
       if (selectedNode) {
         parentPath = selectedNode.name.endsWith("/")
@@ -407,8 +407,8 @@ function App() {
     let newTree: TreeNode;
 
     // 如果没有选中节点,或选中的是根节点
-    if (!selectedNodeId || selectedNodeId === "root") {
-      treeRef.current?.expandNode("root");
+    if (!selectedNodeId || isRoot(fileTree, selectedNodeId)) {
+      treeRef.current?.expandNode(fileTree.id);
       newTree = {
         ...fileTree,
         children: [...(fileTree.children || []), newNode],
@@ -552,7 +552,7 @@ function App() {
                       size="icon"
                       className="w-8 h-8" // icon 本来是9，调小一点
                       onClick={() => handleAddFile()}
-                      // disabled={selectedNodeIds.length !== 1}
+                      disabled={selectedNodeIds.length !== 1}
                     >
                       <FilePlus />
                     </Button>
@@ -560,7 +560,7 @@ function App() {
                       size="icon"
                       className="w-8 h-8" // icon 本来是9，调小一点
                       onClick={() => handleAddFolder()}
-                      // disabled={selectedNodeIds.length !== 1}
+                      disabled={selectedNodeIds.length !== 1}
                     >
                       <FolderPlus />
                     </Button>
@@ -578,7 +578,7 @@ function App() {
                       onClick={deleteNode}
                       disabled={
                         selectedNodeIds.length === 0 ||
-                        selectedNodeIds.includes("root")
+                        isRoot(fileTree, selectedNodeIds[0])
                       }
                     >
                       <Trash2 />
