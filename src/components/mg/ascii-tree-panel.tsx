@@ -91,7 +91,11 @@ const AsciiTreePanel = ({
           {copied ? <Check /> : <Clipboard />}
         </Button>
       </div>
-      <div className="flex-1 px-2 py-1 font-mono whitespace-pre overflow-auto">
+      <div
+        className={`flex-1 px-2 py-1 font-mono whitespace-pre ${
+          isAsciiTreeCollapse ? "overflow-hidden" : "overflow-auto"
+        }`}
+      >
         {asciiLines.map((line, index) => (
           <AsciiLine key={index} line={line} />
         ))}
