@@ -14,6 +14,28 @@ type AsciiTreePanelProps = {
   generateAscii: (fileTree: TreeNode) => string;
 };
 
+// 用于渲染单行ASCII文本的组件,主要是着色
+const AsciiLine = ({ line }: { line: string }) => {
+  // 匹配前缀（└── 或 ├── ）和节点名称
+  const match = line.match(/^(.*?)([└├]── )?([^│]*)$/);
+
+  if (!match) return <div>{line}</div>;
+
+  const [, verticalLines, prefix, name] = match;
+  const isFolder = name.trim().endsWith("/");
+
+  return (
+    <div>
+      {/* 渲染垂直线 */}
+      {verticalLines}
+      {/* 渲染前缀（└── 或 ├── ）*/}
+      {prefix}
+      {/* 根据是否是文件夹来决定颜色 */}
+      <span className={isFolder ? "text-blue-500" : ""}>{name}</span>
+    </div>
+  );
+};
+
 const AsciiTreePanel = ({
   asciiTreeRef,
   isAsciiTreeCollapse,
@@ -23,6 +45,7 @@ const AsciiTreePanel = ({
   generateAscii,
 }: AsciiTreePanelProps) => {
   const [copied, setCopied] = useState(false);
+  const asciiLines = generateAscii(fileTree).split("\n");
   return (
     <ResizablePanel
       ref={asciiTreeRef}
@@ -67,13 +90,10 @@ const AsciiTreePanel = ({
           {copied ? <Check /> : <Clipboard />}
         </Button>
       </div>
-      <div
-        className="flex-1 px-2 py-1 font-mono whitespace-pre overflow-auto"
-        // style={{
-        //   overflow: "overlay",
-        // }}
-      >
-        {generateAscii(fileTree)}
+      <div className="flex-1 px-2 py-1 font-mono whitespace-pre overflow-auto">
+        {asciiLines.map((line, index) => (
+          <AsciiLine key={index} line={line} />
+        ))}
       </div>
     </ResizablePanel>
   );
