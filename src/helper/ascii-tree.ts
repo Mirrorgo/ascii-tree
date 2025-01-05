@@ -51,9 +51,8 @@ function parseAsciiTree(asciiText: string): TreeNode {
   ];
 
   lines.slice(1).forEach((line) => {
-    // 改进层级计算逻辑
     const indent = line.match(/^[\s│]*(?:├──|└──|)/)?.[0].length || 0;
-    const level = Math.floor(indent / 4); // 每个层级是 4 个字符(├── 或 └── 加空格)
+    const level = Math.floor(indent / 4);
 
     // 提取节点名称，去除前缀符号
     const name = line.replace(/^[\s│]*(├──|└──)\s*/, "").trim();
@@ -81,6 +80,27 @@ function parseAsciiTree(asciiText: string): TreeNode {
 
     stack.push({ node: newNode, level });
   });
+
+  // 添加处理函数：递归遍历树，为有子节点的节点添加/
+  const processNode = (node: TreeNode) => {
+    // 如果节点有子节点且名称没有以/结尾，则添加/
+    if (node.children && node.children.length > 0 && !node.name.endsWith("/")) {
+      node.name = node.name + "/";
+
+      // 同时更新 path
+      if (!node.path.endsWith("/")) {
+        node.path = node.path + "/";
+      }
+    }
+
+    // 递归处理所有子节点
+    if (node.children) {
+      node.children.forEach(processNode);
+    }
+  };
+
+  // 处理整个树
+  processNode(root);
 
   return root;
 }

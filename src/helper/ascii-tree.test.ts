@@ -3,16 +3,15 @@ import { TreeNode } from "@/typings";
 import { generateAscii, isValidAsciiTree, parseAsciiTree } from "./ascii-tree";
 
 describe("Tree ASCII Processing", () => {
-  // 测试数据准备
   const sampleTree: TreeNode = {
     id: "1",
-    name: "Root",
-    path: "Root",
+    name: "Root/",
+    path: "Root/",
     children: [
       {
         id: "2",
-        name: "Child1",
-        path: "Root/Child1",
+        name: "Child1/",
+        path: "Root/Child1/",
         children: [
           {
             id: "4",
@@ -31,8 +30,8 @@ describe("Tree ASCII Processing", () => {
     ],
   };
 
-  const expectedAscii = `Root
-├── Child1
+  const expectedAscii = `Root/
+├── Child1/
 │   └── Grandchild1
 └── Child2`;
 
@@ -55,18 +54,18 @@ describe("Tree ASCII Processing", () => {
     it("should handle deep nested structure", () => {
       const deepTree: TreeNode = {
         id: "1",
-        name: "Root",
-        path: "Root",
+        name: "Root/",
+        path: "Root/",
         children: [
           {
             id: "2",
-            name: "Level1",
-            path: "Root/Level1",
+            name: "Level1/",
+            path: "Root/Level1/",
             children: [
               {
                 id: "3",
-                name: "Level2",
-                path: "Root/Level1/Level2",
+                name: "Level2/",
+                path: "Root/Level1/Level2/",
                 children: [
                   {
                     id: "4",
@@ -80,9 +79,9 @@ describe("Tree ASCII Processing", () => {
           },
         ],
       };
-      const expected = `Root
-└── Level1
-    └── Level2
+      const expected = `Root/
+└── Level1/
+    └── Level2/
         └── Level3`;
       expect(generateAscii(deepTree).trim()).toBe(expected);
     });
@@ -91,12 +90,55 @@ describe("Tree ASCII Processing", () => {
   describe("parseAsciiTree", () => {
     it("should parse ASCII tree back to TreeNode structure", () => {
       const parsed = parseAsciiTree(expectedAscii);
-      // 由于 id 是动态生成的，我们只比较结构和名称
-      expect(parsed.name).toBe("Root");
+      expect(parsed.name).toBe("Root/");
       expect(parsed.children?.length).toBe(2);
-      expect(parsed.children?.[0].name).toBe("Child1");
+      expect(parsed.children?.[0].name).toBe("Child1/");
       expect(parsed.children?.[1].name).toBe("Child2");
       expect(parsed.children?.[0].children?.[0].name).toBe("Grandchild1");
+    });
+
+    it("should automatically add slash to folders with children", () => {
+      const asciiTree = `Root
+├── Folder1
+│   └── file1.txt
+└── file2.txt`;
+
+      const parsed = parseAsciiTree(asciiTree);
+      expect(parsed.name).toBe("Root/"); // 有子节点，添加/
+      expect(parsed.children?.[0].name).toBe("Folder1/"); // 有子节点，添加/
+      expect(parsed.children?.[0].children?.[0].name).toBe("file1.txt"); // 无子节点，不添加/
+      expect(parsed.children?.[1].name).toBe("file2.txt"); // 无子节点，不添加/
+    });
+
+    it("should preserve existing slashes in folder names", () => {
+      const asciiTree = `root/
+├── folder1/
+│   └── file1.txt
+└── folder2/
+    └── file2.txt`;
+
+      const parsed = parseAsciiTree(asciiTree);
+      expect(parsed.name).toBe("root/");
+      expect(parsed.children?.[0].name).toBe("folder1/");
+      expect(parsed.children?.[1].name).toBe("folder2/");
+    });
+
+    it("should handle mixed cases with and without trailing slashes", () => {
+      const asciiTree = `project
+├── src/
+│   ├── components
+│   │   └── Button.tsx
+│   └── index.ts
+└── package.json`;
+      const parsed = parseAsciiTree(asciiTree);
+      expect(parsed.name).toBe("project/"); // 添加/因为有子节点
+      expect(parsed.children?.[0].name).toBe("src/"); // 保持已有的/
+      expect(parsed.children?.[0].children?.[0].name).toBe("components/"); // 添加/因为有子节点
+      expect(parsed.children?.[0].children?.[0].children?.[0].name).toBe(
+        "Button.tsx"
+      ); // 不添加/
+      expect(parsed.children?.[0].children?.[1].name).toBe("index.ts"); // 不添加/
+      expect(parsed.children?.[1].name).toBe("package.json"); // 不添加/
     });
 
     it("should handle single node ASCII tree", () => {
