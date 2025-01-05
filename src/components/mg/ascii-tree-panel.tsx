@@ -16,22 +16,23 @@ type AsciiTreePanelProps = {
 
 // 用于渲染单行ASCII文本的组件,主要是着色
 const AsciiLine = ({ line }: { line: string }) => {
-  // 匹配前缀（└── 或 ├── ）和节点名称
-  const match = line.match(/^(.*?)([└├]── )?([^│]*)$/);
+  // 匹配前缀（包括缩进和树形符号）、名称和可能的斜杠
+  const match = line.match(/(.*?[└├]── )?(.+?)(\/?$)/);
 
-  if (!match) return <div>{line}</div>;
+  if (!match) {
+    return <div>{line}</div>;
+  }
 
-  const [, verticalLines, prefix, name] = match;
-  const isFolder = name.trim().endsWith("/");
+  const [, prefix = "", name, slash = ""] = match;
+
+  // 只有当存在斜杠时，名称才需要着色
+  const isFolder = slash === "/";
 
   return (
     <div>
-      {/* 渲染垂直线 */}
-      {verticalLines}
-      {/* 渲染前缀（└── 或 ├── ）*/}
       {prefix}
-      {/* 根据是否是文件夹来决定颜色 */}
-      <span className={isFolder ? "text-blue-500" : ""}>{name}</span>
+      <span className={isFolder ? "text-blue-700" : undefined}>{name}</span>
+      {slash}
     </div>
   );
 };
