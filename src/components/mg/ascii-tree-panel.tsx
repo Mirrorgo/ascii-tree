@@ -1,9 +1,23 @@
-import { Check, ChevronDown, ChevronRight, Clipboard } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Clipboard,
+  Settings2,
+} from "lucide-react";
 import { ResizablePanel } from "../ui/resizable";
-import { Button } from "../ui/button";
-import { Dispatch, RefObject, SetStateAction, useState } from "react";
+import {
+  Dispatch,
+  MouseEvent,
+  RefObject,
+  SetStateAction,
+  useState,
+} from "react";
 import { ImperativePanelHandle } from "react-resizable-panels";
 import { TreeNode } from "@/typings";
+import { Toggle } from "../ui/toggle";
+import { Switch } from "../ui/switch";
+import { Label } from "../ui/label";
 
 type AsciiTreePanelProps = {
   asciiTreeRef: RefObject<ImperativePanelHandle>;
@@ -12,29 +26,6 @@ type AsciiTreePanelProps = {
   showExplorerPanel: boolean;
   fileTree: TreeNode;
   generateAscii: (fileTree: TreeNode) => string;
-};
-
-// 用于渲染单行ASCII文本的组件,主要是着色
-const AsciiLine = ({ line }: { line: string }) => {
-  // 匹配前缀（包括缩进和树形符号）、名称和可能的斜杠
-  const match = line.match(/(.*?[└├]── )?(.+?)(\/?$)/);
-
-  if (!match) {
-    return <div>{line}</div>;
-  }
-
-  const [, prefix = "", name, slash = ""] = match;
-
-  // 只有当存在斜杠时，名称才需要着色
-  const isFolder = slash === "/";
-
-  return (
-    <div>
-      {prefix}
-      <span className={isFolder ? "text-blue-700" : undefined}>{name}</span>
-      {slash}
-    </div>
-  );
 };
 
 const AsciiTreePanel = ({
@@ -46,7 +37,43 @@ const AsciiTreePanel = ({
   generateAscii,
 }: AsciiTreePanelProps) => {
   const [copied, setCopied] = useState(false);
-  const asciiLines = generateAscii(fileTree).split("\n");
+  const [showTrailingSlash, setShowTrailingSlash] = useState(true);
+  const [isAsciiColored, setIsAsciiColored] = useState(true);
+  const [isToolbarVisible, setIsToolbarVisible] = useState(false);
+
+  // 处理ASCII内容
+  const processAsciiContent = (rawAscii: string) => {
+    return showTrailingSlash
+      ? rawAscii
+      : rawAscii
+          .split("\n")
+          .map((line) => (line.endsWith("/") ? line.slice(0, -1) : line))
+          .join("\n");
+  };
+
+  const rawAscii = generateAscii(fileTree);
+
+  const handleCopyClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(processAsciiContent(rawAscii));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 600);
+  };
+
+  const handleToggleToolbar = (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    setIsToolbarVisible(!isToolbarVisible);
+  };
+
+  const handlePanelToggle = () => {
+    if (isAsciiTreeCollapse) {
+      asciiTreeRef.current?.expand();
+    } else {
+      asciiTreeRef.current?.collapse();
+    }
+    setIsAsciiTreeCollapse(!isAsciiTreeCollapse);
+  };
+
   return (
     <ResizablePanel
       ref={asciiTreeRef}
@@ -61,11 +88,7 @@ const AsciiTreePanel = ({
     >
       <div
         className="mt-1 px-2 flex justify-between items-center cursor-pointer"
-        onClick={() => {
-          if (isAsciiTreeCollapse) asciiTreeRef.current?.expand();
-          else asciiTreeRef.current?.collapse();
-          setIsAsciiTreeCollapse(!isAsciiTreeCollapse);
-        }}
+        onClick={handlePanelToggle}
       >
         {!showExplorerPanel ? (
           <div className="w-6" />
@@ -74,33 +97,92 @@ const AsciiTreePanel = ({
         ) : (
           <ChevronDown />
         )}
-        <div className="font-bold uppercase">ascii tree</div>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={(e) => {
-            setCopied(true);
-            setTimeout(() => {
-              setCopied(false);
-            }, 600);
-            const ascii = generateAscii(fileTree);
-            navigator.clipboard.writeText(ascii);
-            e.stopPropagation();
-          }}
-        >
-          {copied ? <Check /> : <Clipboard />}
-        </Button>
+        <div className="font-bold uppercase translate-x-4">ascii</div>
+        <div className="-mr-2">
+          <Toggle
+            size="sm"
+            onClick={handleToggleToolbar}
+            pressed={isToolbarVisible}
+          >
+            <Settings2 />
+          </Toggle>
+          <Toggle size="sm" pressed={false} onClick={handleCopyClick}>
+            {copied ? <Check /> : <Clipboard />}
+          </Toggle>
+        </div>
       </div>
+
+      {isToolbarVisible && (
+        <div className="flex justify-around">
+          <div className="flex items-center space-x-1">
+            <Switch
+              id="trailing-slash"
+              className="scale-90"
+              checked={showTrailingSlash}
+              onCheckedChange={setShowTrailingSlash}
+            />
+            <Label htmlFor="trailing-slash">Trailing / </Label>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Switch
+              id="coloring"
+              className="scale-90"
+              checked={isAsciiColored}
+              onCheckedChange={setIsAsciiColored}
+            />
+            <Label htmlFor="coloring">Color</Label>
+          </div>
+        </div>
+      )}
+
       <div
         className={`flex-1 px-2 py-1 font-mono whitespace-pre ${
           isAsciiTreeCollapse ? "overflow-hidden" : "overflow-auto"
         }`}
       >
-        {asciiLines.map((line, index) => (
-          <AsciiLine key={index} line={line} />
+        {rawAscii.split("\n").map((line, index) => (
+          <AsciiLine
+            key={index}
+            line={line}
+            showTrailingSlash={showTrailingSlash}
+            isAsciiColored={isAsciiColored}
+          />
         ))}
       </div>
     </ResizablePanel>
+  );
+};
+
+// 用于渲染单行ASCII文本的组件,主要是着色
+const AsciiLine = ({
+  line,
+  showTrailingSlash,
+  isAsciiColored,
+}: {
+  line: string;
+  showTrailingSlash: boolean;
+  isAsciiColored: boolean;
+}) => {
+  const match = line.match(/(.*?[└├]── )?(.+?)(\/?$)/);
+
+  if (!match) {
+    return <div>{line}</div>;
+  }
+
+  const [, prefix = "", name, slash = ""] = match;
+
+  return (
+    <div>
+      {prefix}
+      <span
+        className={
+          isAsciiColored && slash === "/" ? "text-blue-700" : undefined
+        }
+      >
+        {name}
+      </span>
+      {showTrailingSlash ? slash : ""}
+    </div>
   );
 };
 
