@@ -8,7 +8,7 @@ import { Toaster } from "./components/ui/toaster.tsx";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
-    <Analytics />
     <Toaster />
+    <Analytics />
   </StrictMode>
 );

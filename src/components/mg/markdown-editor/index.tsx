@@ -3,13 +3,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Undo2 } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import TextEditor, { TextEditorRef } from "./text-editor";
-import { MarkdownParseError } from "@/typings";
-
-export interface TextState {
-  content: string;
-  isValid: boolean;
-  error: MarkdownParseError | null;
-}
+import { TextState } from "@/typings";
 
 interface MarkdownEditorProps {
   value: string;

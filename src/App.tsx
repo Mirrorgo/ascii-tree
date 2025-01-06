@@ -7,6 +7,7 @@ import {
   Github,
   Redo2,
   Settings,
+  Share2,
   Trash2,
   Undo2,
 } from "lucide-react";
@@ -39,13 +40,16 @@ import {
 
 import { INITIAL_TREE } from "./helper/constants";
 import { TextState, TreeNode } from "./typings";
-import { useTreeHistory } from "./hooks/use-tree-history";
 import ShortcutsDialog from "./components/mg/shortcuts";
 import AsciiTreeParserDialog from "./components/mg/ascii-tree-parser-dialog";
 import AsciiTreePanel from "./components/mg/ascii-tree-panel";
 import MarkdownEditor from "./components/mg/markdown-editor";
+import { useTreeHistory } from "./hooks/use-tree-history";
+import * as LZString from "lz-string";
+import { useToast } from "./hooks/use-toast";
 
 function App() {
+  const { toast } = useToast();
   const {
     fileTree,
     setFileTree,
@@ -61,6 +65,21 @@ function App() {
     canUndo,
     canRedo,
   } = useTreeHistory();
+
+  useEffect(() => {
+    const compressed = new URLSearchParams(window.location.search).get("tree");
+    if (compressed) {
+      const urlTree = JSON.parse(
+        LZString.decompressFromEncodedURIComponent(compressed)
+      );
+      setFileTree(urlTree);
+      setTextState({
+        content: treeToMarkdown(urlTree),
+        isValid: true,
+        error: null,
+      });
+    }
+  }, []);
 
   // 文本状态
   const [textState, setTextState] = useState<TextState>({
@@ -435,6 +454,16 @@ function App() {
 
   const treeRef = useRef<TreeNodeRef>(null);
 
+  const handleShare = () => {
+    const url = new URL(window.location.href);
+    navigator.clipboard.writeText(url.href);
+    toast({
+      title: "Link copied",
+      description: "Link has been copied to clipboard",
+      duration: 1000,
+    });
+  };
+
   return (
     <div className="h-screen flex flex-col">
       <div className="w-full border-b px-2 mt-2 mb-2">
@@ -449,48 +478,53 @@ function App() {
             </div>
             <Github className="cursor-pointer" />
           </a>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon">
-                <Settings />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuLabel>View</DropdownMenuLabel>
-              <DropdownMenuCheckboxItem
-                className="cursor-pointer"
-                checked={showExplorerPanel}
-                onCheckedChange={(checked) => {
-                  setShowExplorerPanel(checked);
-                  if (!checked) {
-                    setIsAsciiTreeCollapse(false);
-                  }
-                }}
-              >
-                Show Explorer Panel
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                className="cursor-pointer"
-                checked={showResizeHandle}
-                onClick={() => setShowResizeHandle(!showResizeHandle)}
-              >
-                Show Resize Handles
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                disabled={!textState.isValid}
-                onClick={handleFormatMarkdownList}
-              >
-                {/* <DropdownMenuShortcut>⇧⌥F</DropdownMenuShortcut> */}
-                <div className="flex items-baseline gap-2">
-                  <div>Format Markdown List</div>
-                  <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-                </div>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="space-x-4">
+            <Button size="icon" variant="ghost" onClick={handleShare}>
+              <Share2 />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon">
+                  <Settings />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>View</DropdownMenuLabel>
+                <DropdownMenuCheckboxItem
+                  className="cursor-pointer"
+                  checked={showExplorerPanel}
+                  onCheckedChange={(checked) => {
+                    setShowExplorerPanel(checked);
+                    if (!checked) {
+                      setIsAsciiTreeCollapse(false);
+                    }
+                  }}
+                >
+                  Show Explorer Panel
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  className="cursor-pointer"
+                  checked={showResizeHandle}
+                  onClick={() => setShowResizeHandle(!showResizeHandle)}
+                >
+                  Show Resize Handles
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  disabled={!textState.isValid}
+                  onClick={handleFormatMarkdownList}
+                >
+                  {/* <DropdownMenuShortcut>⇧⌥F</DropdownMenuShortcut> */}
+                  <div className="flex items-baseline gap-2">
+                    <div>Format Markdown List</div>
+                    <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         <div className="flex justify-between">
           {/* global bar */}
