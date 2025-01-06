@@ -458,7 +458,7 @@ function App() {
     const url = new URL(window.location.href);
     navigator.clipboard.writeText(url.href);
     toast({
-      title: "Link copied",
+      title: "Link Copied",
       description: "Link has been copied to clipboard",
       duration: 1000,
     });
