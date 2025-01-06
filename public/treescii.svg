@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+	<g>
+		<!-- 点 -->
+		<circle cx="56" cy="65" r="30" fill="Black" />
+
+		<!-- 竖线 -->
+		<line x1="56" y1="125" x2="56" y2="171" stroke="Black" stroke-width="50" />
+
+		<!-- 使用path创建圆角转角 -->
+		<path d="M56 171 Q56 196 81 196 L190 196" stroke="Black" stroke-width="50" fill="none" />
+	</g>
+</svg>
