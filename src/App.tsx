@@ -12,7 +12,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { TextEditorRef } from "./components/mg/markdown-editor/text-editor";
-import { isRoot, markdownToTree, treeToMarkdown } from "./helper/global";
+import { isRoot } from "./helper/global";
 import { createNode, getNodesBetween, processNode } from "./helper/explorer";
 import {
   generateAscii,
@@ -46,6 +46,7 @@ import AsciiTreePanel from "./components/mg/ascii-tree-panel";
 import MarkdownEditor from "./components/mg/markdown-editor";
 import { useTreeHistory } from "./hooks/use-tree-history";
 import { useToast } from "./hooks/use-toast";
+import { markdownToTree, treeToMarkdown } from "./helper/markdown";
 
 function App() {
   const { toast } = useToast();

@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
-import { treeToMarkdown } from "../helper/global";
 import { INITIAL_TREE } from "../helper/constants";
 import { HistoryEntry, TextState, TreeNode, TreeState } from "../typings";
 import debounce from "@/lib/debounce";
 import { generateAscii } from "@/helper/ascii-tree";
+import { treeToMarkdown } from "@/helper/markdown";
 
 const updateUrl = debounce((tree: TreeNode) => {
   const compressed = encodeURIComponent(generateAscii(tree));
