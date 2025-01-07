@@ -225,3 +225,7 @@ ascii-tree那边生成的默认带有 / , 但是可以关闭掉 /
 
 
 文件夹和文件的颜色不一样在ascii-tree这边看的话
+
+
+
+enable comment in file and get gitignore as directoryIgnore

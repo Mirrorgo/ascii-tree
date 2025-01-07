@@ -45,7 +45,6 @@ import AsciiTreeParserDialog from "./components/mg/ascii-tree-parser-dialog";
 import AsciiTreePanel from "./components/mg/ascii-tree-panel";
 import MarkdownEditor from "./components/mg/markdown-editor";
 import { useTreeHistory } from "./hooks/use-tree-history";
-import * as LZString from "lz-string";
 import { useToast } from "./hooks/use-toast";
 
 function App() {
@@ -69,15 +68,14 @@ function App() {
   useEffect(() => {
     const compressed = new URLSearchParams(window.location.search).get("tree");
     if (compressed) {
-      const urlTree = JSON.parse(
-        LZString.decompressFromEncodedURIComponent(compressed)
-      );
-      setFileTree(urlTree);
-      setTextState({
-        content: treeToMarkdown(urlTree),
-        isValid: true,
-        error: null,
-      });
+      const asciiTree = decodeURIComponent(compressed);
+      if (!isValidAsciiTree(asciiTree)) {
+        try {
+          resetEditorFromAsciiTree(asciiTree);
+        } catch (error) {
+          console.error("Error parsing ASCII tree:", error);
+        }
+      }
     }
   }, []);
 
@@ -279,52 +277,56 @@ function App() {
   const asciiTreeTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
   const [asciiParseError, setAsciiParseError] = useState<string | null>(null);
 
+  const resetEditorFromAsciiTree = (asciiText: string) => {
+    const newTree = parseAsciiTree(asciiText);
+
+    // Convert the tree to markdown format
+    const markdownText = treeToMarkdown(newTree);
+
+    // Update the file tree state
+    setFileTree(newTree);
+
+    // Update the text state
+    setTextState({
+      content: markdownText,
+      isValid: true,
+      error: null,
+    });
+
+    // Clear any existing selections
+    setSelectedNodeIds([]);
+    setLastSelectedId(null);
+
+    // Add to history
+    addToHistory(
+      {
+        tree: newTree,
+        selectedNodeIds: [],
+        lastSelectedId: null,
+      },
+      {
+        content: markdownText,
+        isValid: true,
+        error: null,
+      }
+    );
+
+    // Close the dialog
+    setIsAsciiTreeParserDialogOpen(false);
+
+    // Reset tree lock state
+    setIsTreeLocked(false);
+
+    setAsciiParseError(null);
+  };
+
   function handleParseAsciiTree(): void {
     const asciiText = asciiTreeTextAreaRef.current?.value;
     if (!asciiText) return;
 
     if (isValidAsciiTree(asciiText)) {
       try {
-        const newTree = parseAsciiTree(asciiText);
-
-        // Convert the tree to markdown format
-        const markdownText = treeToMarkdown(newTree);
-
-        // Update the file tree state
-        setFileTree(newTree);
-
-        // Update the text state
-        setTextState({
-          content: markdownText,
-          isValid: true,
-          error: null,
-        });
-
-        // Clear any existing selections
-        setSelectedNodeIds([]);
-        setLastSelectedId(null);
-
-        // Add to history
-        addToHistory(
-          {
-            tree: newTree,
-            selectedNodeIds: [],
-            lastSelectedId: null,
-          },
-          {
-            content: markdownText,
-            isValid: true,
-            error: null,
-          }
-        );
-
-        // Close the dialog
-        setIsAsciiTreeParserDialogOpen(false);
-
-        // Reset tree lock state
-        setIsTreeLocked(false);
-
-        setAsciiParseError(null);
+        resetEditorFromAsciiTree(asciiText);
       } catch (error) {
         setAsciiParseError(
           error instanceof Error ? error.message : String(error)

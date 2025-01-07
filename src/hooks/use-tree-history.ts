@@ -3,7 +3,16 @@ import { treeToMarkdown } from "../helper/global";
 import { INITIAL_TREE } from "../helper/constants";
 import { HistoryEntry, TextState, TreeNode, TreeState } from "../typings";
 import debounce from "@/lib/debounce";
-import * as LZString from "lz-string";
+import { generateAscii } from "@/helper/ascii-tree";
+
+const updateUrl = debounce((tree: TreeNode) => {
+  const compressed = encodeURIComponent(generateAscii(tree));
+  window.history.replaceState(
+    null,
+    "",
+    `${window.location.pathname}?tree=${compressed}`
+  );
+}, 500);
 
 export function useTreeHistory() {
   const [fileTree, setFileTree] = useState<TreeNode>(INITIAL_TREE);
@@ -12,18 +21,6 @@ export function useTreeHistory() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isTreeLocked, setIsTreeLocked] = useState(false);
-
-  // 组件外部定义 debounce 函数
-  const updateUrl = debounce((tree: TreeNode) => {
-    const compressed = LZString.compressToEncodedURIComponent(
-      JSON.stringify(tree)
-    );
-    window.history.replaceState(
-      null,
-      "",
-      `${window.location.pathname}?tree=${compressed}`
-    );
-  }, 500);
 
   // 在组件中使用
   useEffect(() => {
