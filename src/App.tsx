@@ -70,7 +70,7 @@ function App() {
     const compressed = new URLSearchParams(window.location.search).get("tree");
     if (compressed) {
       const asciiTree = decodeURIComponent(compressed);
-      if (!isValidAsciiTree(asciiTree)) {
+      if (isValidAsciiTree(asciiTree)) {
         try {
           resetEditorFromAsciiTree(asciiTree);
         } catch (error) {
