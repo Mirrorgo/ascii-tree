@@ -66,7 +66,9 @@ src/
 
 ## Online Access
 
-[https://ascii-tree.unimelb.top](https://ascii-tree.unimelb.top)
+[https://ascii-tree.unimelb.top/](https://ascii-tree.unimelb.top)
+
+[https://ascii-tree.mirotoys.com/](https://ascii-tree.mirotoys.com/)
 
 ## License
 
