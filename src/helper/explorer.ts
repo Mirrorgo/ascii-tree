@@ -2,19 +2,28 @@ import { TreeNode } from "@/typings";
 import { generateId } from "./global";
 
 // 添加一个辅助函数来获取树中的所有节点ID
-function getAllNodeIds(node: TreeNode): string[] {
-  const ids = [node.id];
-  if (node.children) {
-    node.children.forEach((child) => {
-      ids.push(...getAllNodeIds(child));
-    });
-  }
-  return ids;
+function getAllNodeIds(nodes: TreeNode[]): string[] {
+  return nodes.reduce<string[]>(
+    (acc, node) => [
+      ...acc,
+      node.id,
+      ...(node.children ? getAllNodeIds(node.children) : []),
+    ],
+    []
+  );
+
+  // const ids = [node.id];
+  // if (node.children) {
+  //   node.children.forEach((child) => {
+  //     ids.push(...getAllNodeIds(child));
+  //   });
+  // }
+  // return ids;
 }
 
 // 添加一个函数来获取两个节点之间的所有节点
 function getNodesBetween(
-  tree: TreeNode,
+  tree: TreeNode[],
   startId: string,
   endId: string
 ): string[] {
@@ -44,51 +53,54 @@ const createNode = (
   };
 };
 
-// 处理树节点的通用函数
 const processNode = (
-  node: TreeNode,
+  nodes: TreeNode[],
   selectedNodeId: string,
   newNode: TreeNode
-): TreeNode => {
-  // 如果当前节点有子节点且其中包含目标节点，说明我们找到了目标节点的父节点
-  if (node.children?.some((child) => child.id === selectedNodeId)) {
-    // 获取选中的节点，判断是文件还是文件夹
-    const selectedNode = node.children.find(
-      (child) => child.id === selectedNodeId
-    );
-    if (selectedNode?.name.endsWith("/")) {
-      // 如果选中的是文件夹，在其子节点中添加
-      return {
-        ...node,
-        children: node.children.map((child) =>
-          child.id === selectedNodeId
-            ? {
+): TreeNode[] => {
+  return nodes.map((node) => {
+    // 如果当前节点有子节点并且它们之中有选中的节点
+    if (node.children?.some((child) => child.id === selectedNodeId)) {
+      // 找到选中的节点
+      const selectedNode = node.children.find(
+        (child) => child.id === selectedNodeId
+      );
+
+      // 如果选中的是文件夹
+      if (selectedNode && selectedNode.name.endsWith("/")) {
+        return {
+          ...node,
+          children: node.children.map((child) => {
+            if (child.id === selectedNodeId) {
+              // 在其子节点中添加新节点
+              return {
                 ...child,
                 children: [...(child.children || []), newNode],
-              }
-            : child
-        ),
-      };
-    } else {
-      // 如果选中的是文件，添加为兄弟节点
+              };
+            }
+            return child;
+          }),
+        };
+      } else {
+        // 如果选中的是文件，则把新节点当作兄弟节点插入
+        return {
+          ...node,
+          children: [...node.children, newNode],
+        };
+      }
+    }
+
+    // 如果没有在当前节点的子节点中找到选中的节点，但当前节点仍然有子节点，则继续递归
+    if (node.children && node.children.length > 0) {
       return {
         ...node,
-        children: [...node.children, newNode],
+        children: processNode(node.children, selectedNodeId, newNode),
       };
     }
-  }
 
-  // 如果有子节点，继续递归
-  if (node.children) {
-    return {
-      ...node,
-      children: node.children.map((child) =>
-        processNode(child, selectedNodeId, newNode)
-      ),
-    };
-  }
-
-  return node;
+    // 如果当前节点没有子节点，直接返回自身即可
+    return node;
+  });
 };
 
 export { getNodesBetween, getAllNodeIds, createNode, processNode };

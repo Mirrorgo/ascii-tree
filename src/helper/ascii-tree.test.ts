@@ -3,32 +3,34 @@ import { TreeNode } from "@/typings";
 import { generateAscii, isValidAsciiTree, parseAsciiTree } from "./ascii-tree";
 
 describe("Tree ASCII Processing", () => {
-  const sampleTree: TreeNode = {
-    id: "1",
-    name: "Root/",
-    path: "Root/",
-    children: [
-      {
-        id: "2",
-        name: "Child1/",
-        path: "Root/Child1/",
-        children: [
-          {
-            id: "4",
-            name: "Grandchild1",
-            path: "Root/Child1/Grandchild1",
-            children: [],
-          },
-        ],
-      },
-      {
-        id: "3",
-        name: "Child2",
-        path: "Root/Child2",
-        children: [],
-      },
-    ],
-  };
+  const sampleTree: TreeNode[] = [
+    {
+      id: "1",
+      name: "Root/",
+      path: "Root/",
+      children: [
+        {
+          id: "2",
+          name: "Child1/",
+          path: "Root/Child1/",
+          children: [
+            {
+              id: "4",
+              name: "Grandchild1",
+              path: "Root/Child1/Grandchild1",
+              children: [],
+            },
+          ],
+        },
+        {
+          id: "3",
+          name: "Child2",
+          path: "Root/Child2",
+          children: [],
+        },
+      ],
+    },
+  ];
 
   const expectedAscii = `Root/
 ├── Child1/
@@ -42,43 +44,47 @@ describe("Tree ASCII Processing", () => {
     });
 
     it("should handle single node tree", () => {
-      const singleNode: TreeNode = {
-        id: "1",
-        name: "Single",
-        path: "Single",
-        children: [],
-      };
+      const singleNode: TreeNode[] = [
+        {
+          id: "1",
+          name: "Single",
+          path: "Single",
+          children: [],
+        },
+      ];
       expect(generateAscii(singleNode).trim()).toBe("Single");
     });
 
     it("should handle deep nested structure", () => {
-      const deepTree: TreeNode = {
-        id: "1",
-        name: "Root/",
-        path: "Root/",
-        children: [
-          {
-            id: "2",
-            name: "Level1/",
-            path: "Root/Level1/",
-            children: [
-              {
-                id: "3",
-                name: "Level2/",
-                path: "Root/Level1/Level2/",
-                children: [
-                  {
-                    id: "4",
-                    name: "Level3",
-                    path: "Root/Level1/Level2/Level3",
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
+      const deepTree: TreeNode[] = [
+        {
+          id: "1",
+          name: "Root/",
+          path: "Root/",
+          children: [
+            {
+              id: "2",
+              name: "Level1/",
+              path: "Root/Level1/",
+              children: [
+                {
+                  id: "3",
+                  name: "Level2/",
+                  path: "Root/Level1/Level2/",
+                  children: [
+                    {
+                      id: "4",
+                      name: "Level3",
+                      path: "Root/Level1/Level2/Level3",
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ];
       const expected = `Root/
 └── Level1/
     └── Level2/
@@ -89,7 +95,7 @@ describe("Tree ASCII Processing", () => {
 
   describe("parseAsciiTree", () => {
     it("should parse ASCII tree back to TreeNode structure", () => {
-      const parsed = parseAsciiTree(expectedAscii);
+      const parsed = parseAsciiTree(expectedAscii)[0];
       expect(parsed.name).toBe("Root/");
       expect(parsed.children?.length).toBe(2);
       expect(parsed.children?.[0].name).toBe("Child1/");
@@ -103,7 +109,7 @@ describe("Tree ASCII Processing", () => {
 │   └── file1.txt
 └── file2.txt`;
 
-      const parsed = parseAsciiTree(asciiTree);
+      const parsed = parseAsciiTree(asciiTree)[0];
       expect(parsed.name).toBe("Root/"); // 有子节点，添加/
       expect(parsed.children?.[0].name).toBe("Folder1/"); // 有子节点，添加/
       expect(parsed.children?.[0].children?.[0].name).toBe("file1.txt"); // 无子节点，不添加/
@@ -112,12 +118,12 @@ describe("Tree ASCII Processing", () => {
 
     it("should preserve existing slashes in folder names", () => {
       const asciiTree = `root/
-├── folder1/
-│   └── file1.txt
-└── folder2/
-    └── file2.txt`;
+    ├── folder1/
+    │   └── file1.txt
+    └── folder2/
+        └── file2.txt`;
 
-      const parsed = parseAsciiTree(asciiTree);
+      const parsed = parseAsciiTree(asciiTree)[0];
       expect(parsed.name).toBe("root/");
       expect(parsed.children?.[0].name).toBe("folder1/");
       expect(parsed.children?.[1].name).toBe("folder2/");
@@ -125,12 +131,12 @@ describe("Tree ASCII Processing", () => {
 
     it("should handle mixed cases with and without trailing slashes", () => {
       const asciiTree = `project
-├── src/
-│   ├── components
-│   │   └── Button.tsx
-│   └── index.ts
-└── package.json`;
-      const parsed = parseAsciiTree(asciiTree);
+    ├── src/
+    │   ├── components
+    │   │   └── Button.tsx
+    │   └── index.ts
+    └── package.json`;
+      const parsed = parseAsciiTree(asciiTree)[0];
       expect(parsed.name).toBe("project/"); // 添加/因为有子节点
       expect(parsed.children?.[0].name).toBe("src/"); // 保持已有的/
       expect(parsed.children?.[0].children?.[0].name).toBe("components/"); // 添加/因为有子节点
@@ -142,25 +148,25 @@ describe("Tree ASCII Processing", () => {
     });
 
     it("should handle single node ASCII tree", () => {
-      const parsed = parseAsciiTree("SingleNode");
+      const parsed = parseAsciiTree("SingleNode")[0];
       expect(parsed.name).toBe("SingleNode");
-      expect(parsed.children?.length).toBe(0);
+      expect(parsed.children).toBeUndefined();
     });
 
     it("should preserve empty children array", () => {
-      const parsed = parseAsciiTree("Root\n└── Leaf");
-      expect(parsed.children?.[0].children).toEqual([]);
+      const parsed = parseAsciiTree("Root\n└── Leaf")[0];
+      expect(parsed.children?.[0].children).toBeUndefined();
     });
 
     it("should correctly parse paths for nested folders", () => {
       const asciiTree = `root/
-  ├── folder1/
-  │   ├── subfolder/
-  │   │   └── file1
-  │   └── file2
-  └── folder2/`;
+├── folder1/
+│   ├── subfolder/
+│   │   └── file1
+│   └── file2
+└── folder2/`;
 
-      const parsed = parseAsciiTree(asciiTree);
+      const parsed = parseAsciiTree(asciiTree)[0];
       expect(parsed.path).toBe("root/");
       expect(parsed.children?.[0].path).toBe("root/folder1/");
       expect(parsed.children?.[0].children?.[0].path).toBe(
@@ -173,24 +179,24 @@ describe("Tree ASCII Processing", () => {
 
     it("should handle mixed files and folders", () => {
       const asciiTree = `project/
-  ├── src/
-  │   ├── index.ts
-  │   └── types/
-  └── package.json`;
+├── src/
+│   ├── index.ts
+│   └── types/
+└── package.json`;
 
-      const parsed = parseAsciiTree(asciiTree);
+      const parsed = parseAsciiTree(asciiTree)[0];
       expect(parsed.children?.length).toBe(2);
       expect(parsed.children?.[0].name).toBe("src/");
       expect(parsed.children?.[0].children?.[0].name).toBe("index.ts");
       expect(parsed.children?.[1].name).toBe("package.json");
-      expect(parsed.children?.[1].children?.length).toBe(0);
+      expect(parsed.children?.[1].children).toBeUndefined();
     });
 
     it("should maintain folder indicators (/)", () => {
       const asciiTree = `root/
-  └── folder/`;
+└── folder/`;
 
-      const parsed = parseAsciiTree(asciiTree);
+      const parsed = parseAsciiTree(asciiTree)[0];
       expect(parsed.name.endsWith("/")).toBe(true);
       expect(parsed.children?.[0].name.endsWith("/")).toBe(true);
     });
@@ -215,8 +221,8 @@ describe("Tree ASCII Processing", () => {
 
     it("should reject malformed branch symbols", () => {
       const invalidTree = `Root
-├─── Invalid
-└── Valid`;
+  ├─── Invalid
+  └── Valid`;
       expect(isValidAsciiTree(invalidTree)).toBe(false);
     });
 
@@ -230,14 +236,73 @@ describe("Tree ASCII Processing", () => {
       expect(isValidAsciiTree(validTree)).toBe(true);
     });
 
-    it("should reject ASCII tree with duplicate sibling names", () => {
+    it("should reject ASCII tree with duplicate sibling names at the same level", () => {
       const asciiTree = `root/
 ├── file1
 ├── file1
 └── file1`;
-
       expect(isValidAsciiTree(asciiTree)).toBe(false);
     });
+
+    it("should reject ASCII tree with duplicate root nodes", () => {
+      const asciiTree = `root/
+└── file1
+root/
+└── file2`;
+      expect(isValidAsciiTree(asciiTree)).toBe(false);
+    });
+
+    it("should accept same node names under different parents", () => {
+      const asciiTree = `root/
+├── parent1/
+│   └── child
+└── parent2/
+    └── child`;
+      expect(isValidAsciiTree(asciiTree)).toBe(true);
+    });
+
+    //     it("should throw an error when parsing ASCII tree with multiple root nodes", () => {
+    //       const asciiTree = `root1/
+    // ├── child1
+    // └── child2
+    // root2/
+    // └── child3`;
+    //       expect(parseAsciiTree(asciiTree)).toBeUndefined();
+    //     });
+
+    //     it("should throw an error when parsing ASCII tree with invalid branch symbols", () => {
+    //       const asciiTree = `root/
+    // ├─── child1
+    // └─ child2`;
+    //       expect(parseAsciiTree(asciiTree)).toBeNull();
+    //     });
+
+    //     it("should throw an error when parsing ASCII tree with inconsistent indentation", () => {
+    //       const asciiTree = `root/
+    // ├── child1
+    //     └── child2`; // 缩进不一致
+    //       expect(() => parseAsciiTree(asciiTree)).toThrow(
+    //         /Invalid ASCII tree format/
+    //       );
+    //     });
+
+    //     it("should throw an error when parsing ASCII tree with incorrect vertical lines", () => {
+    //       const asciiTree = `root/
+    // ├── child1
+    // │ └── child2`; // 第二层缺少对齐的垂直线
+    //       expect(() => parseAsciiTree(asciiTree)).toThrow(
+    //         /Invalid ASCII tree format/
+    //       );
+    //     });
+
+    //     it("should throw an error when parsing ASCII tree with child appearing before parent", () => {
+    //       const asciiTree = `root/
+    //     └── child1
+    // └── child2`; // child1 应该在 root 下，但缩进不正确
+    //       expect(() => parseAsciiTree(asciiTree)).toThrow(
+    //         /Invalid ASCII tree format/
+    //       );
+    //     });
   });
   describe("Path Generation", () => {
     it("should handle deep nesting with consistent paths", () => {
@@ -247,7 +312,7 @@ describe("Tree ASCII Processing", () => {
         └── level3/
             └── file.txt`;
 
-      const parsed = parseAsciiTree(asciiTree);
+      const parsed = parseAsciiTree(asciiTree)[0];
       const deepestFile =
         parsed.children?.[0].children?.[0].children?.[0].children?.[0];
       expect(deepestFile?.path).toBe("root/level1/level2/level3/file.txt");
@@ -261,7 +326,7 @@ describe("Tree ASCII Processing", () => {
 ├── file_with_underscores
 └── file with spaces`;
 
-      const parsed = parseAsciiTree(asciiTree);
+      const parsed = parseAsciiTree(asciiTree)[0];
       expect(parsed.children?.length).toBe(3);
       expect(parsed.children?.map((c) => c.name)).toContain("file-with-dashes");
       expect(parsed.children?.map((c) => c.name)).toContain(
@@ -275,7 +340,7 @@ describe("Tree ASCII Processing", () => {
 ├── empty-folder/
 └── another-empty/`;
 
-      const parsed = parseAsciiTree(asciiTree);
+      const parsed = parseAsciiTree(asciiTree)[0];
       expect(parsed.children?.length).toBe(2);
       expect(
         parsed.children?.every(

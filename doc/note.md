@@ -229,3 +229,10 @@ ascii-tree那边生成的默认带有 / , 但是可以关闭掉 /
 
 
 enable comment in file and get gitignore as directoryIgnore
+
+
+支持自动添加 /
+
+批量tab
+
+支持quick fix

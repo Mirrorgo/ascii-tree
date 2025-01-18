@@ -5,8 +5,8 @@ import debounce from "@/lib/debounce";
 import { generateAscii } from "@/helper/ascii-tree";
 import { treeToMarkdown } from "@/helper/markdown";
 
-const updateUrl = debounce((tree: TreeNode) => {
-  const compressed = encodeURIComponent(generateAscii(tree));
+const updateUrl = debounce((trees: TreeNode[]) => {
+  const compressed = encodeURIComponent(generateAscii(trees));
   window.history.replaceState(
     null,
     "",
@@ -15,7 +15,7 @@ const updateUrl = debounce((tree: TreeNode) => {
 }, 500);
 
 export function useTreeHistory() {
-  const [fileTree, setFileTree] = useState<TreeNode>(INITIAL_TREE);
+  const [fileTree, setFileTree] = useState<TreeNode[]>(INITIAL_TREE);
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
   const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);

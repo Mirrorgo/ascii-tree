@@ -12,7 +12,6 @@ import {
   Undo2,
 } from "lucide-react";
 import { TextEditorRef } from "./components/mg/markdown-editor/text-editor";
-import { isRoot } from "./helper/global";
 import { createNode, getNodesBetween, processNode } from "./helper/explorer";
 import {
   generateAscii,
@@ -128,24 +127,25 @@ function App() {
   }, [redo]);
 
   const deleteNode = () => {
-    if (selectedNodeIds.length === 0 || isRoot(fileTree, selectedNodeIds[0]))
-      return;
-
-    const removeNodes = (node: TreeNode): TreeNode => {
-      if (node.children) {
-        const filteredChildren = node.children
-          .filter((child) => !selectedNodeIds.includes(child.id))
-          .map(removeNodes);
-
-        return {
-          ...node,
-          children: filteredChildren,
-        };
-      }
-      return node;
+    if (selectedNodeIds.length === 0) return;
+    const removeNodes = (
+      nodes: TreeNode[],
+      selectedIds: string[]
+    ): TreeNode[] => {
+      return nodes
+        .filter((node) => !selectedIds.includes(node.id))
+        .map((node) => {
+          if (node.children) {
+            return {
+              ...node,
+              children: removeNodes(node.children, selectedIds),
+            };
+          }
+          return node;
+        });
     };
+    const newTree = removeNodes(fileTree, selectedNodeIds);
 
-    const newTree = removeNodes(fileTree);
     setFileTree(newTree);
     setSelectedNodeIds([]);
 
@@ -160,21 +160,20 @@ function App() {
       { tree: newTree, selectedNodeIds: [], lastSelectedId: null },
       { content: newText, isValid: true, error: null }
     );
+    return;
   };
 
   const updateNode = (nodeId: string, newName: string) => {
-    const updateTreeNode = (node: TreeNode): TreeNode => {
-      if (node.id === nodeId) {
-        return { ...node, name: newName };
-      }
-      if (node.children) {
-        return {
-          ...node,
-          children: node.children.map(updateTreeNode),
-        };
-      }
-      return node;
-    };
+    const updateTreeNode = (nodes: TreeNode[]): TreeNode[] =>
+      nodes.map((node) => {
+        if (node.id === nodeId) {
+          return { ...node, name: newName }; // 更新当前节点
+        }
+        if (node.children) {
+          return { ...node, children: updateTreeNode(node.children) }; // 递归更新子节点
+        }
+        return node; // 返回未改变的节点
+      });
 
     const newTree = updateTreeNode(fileTree);
     setFileTree(newTree);
@@ -347,6 +346,7 @@ function App() {
       isValid: true,
       error: null,
     });
+    setIsTreeLocked(false);
     addToHistory(
       { tree: INITIAL_TREE, selectedNodeIds: [], lastSelectedId: null },
       { content: newText, isValid: true, error: null }
@@ -355,37 +355,22 @@ function App() {
 
   const handleAddFile = (fileName: string = "New File") => {
     if (selectedNodeIds.length > 1) return;
-
-    const selectedNodeId = selectedNodeIds[0];
-    let parentPath = "";
-
-    // 确定父路径
-    if (selectedNodeId && !isRoot(fileTree, selectedNodeId)) {
+    let newTree: TreeNode[];
+    if (selectedNodeIds.length === 0) {
+      newTree = [...fileTree, createNode(fileName, false)];
+    } else {
+      let parentPath = "";
+      const selectedNodeId = selectedNodeIds[0];
       const selectedNode = findNodeById(fileTree, selectedNodeId);
       if (selectedNode) {
         parentPath = selectedNode.name.endsWith("/")
           ? selectedNode.path
           : getParentPath(selectedNode.path);
       }
-    } else {
-      parentPath = fileTree.path;
-    }
-
-    const newNode = createNode(fileName, false, parentPath);
-    let newTree: TreeNode;
-
-    // 如果没有选中节点,或选中的是根节点
-    if (!selectedNodeId || isRoot(fileTree, selectedNodeId)) {
-      treeRef.current?.expandNode(fileTree.id);
-      newTree = {
-        ...fileTree,
-        children: [...(fileTree.children || []), newNode],
-      };
-    } else {
+      const newNode = createNode(fileName, false, parentPath);
       treeRef.current?.expandNode(selectedNodeId);
       newTree = processNode(fileTree, selectedNodeId, newNode);
     }
-
     // 更新状态
     setFileTree(newTree);
     const newText = treeToMarkdown(newTree);
@@ -399,47 +384,27 @@ function App() {
       { tree: newTree, selectedNodeIds, lastSelectedId },
       { content: newText, isValid: true, error: null }
     );
+    return;
   };
 
   const handleAddFolder = (folderName: string = "New Folder/") => {
     if (selectedNodeIds.length > 1) return;
-
-    const selectedNodeId = selectedNodeIds[0];
-
-    // 确保文件夹名称以 / 结尾
-    if (!folderName.endsWith("/")) {
-      folderName += "/";
-    }
-
-    let parentPath = "";
-
-    // 确定父路径
-    if (selectedNodeId && !isRoot(fileTree, selectedNodeId)) {
+    let newTree: TreeNode[];
+    if (selectedNodeIds.length === 0) {
+      newTree = [...fileTree, createNode(folderName, true)];
+    } else {
+      let parentPath = "";
+      const selectedNodeId = selectedNodeIds[0];
       const selectedNode = findNodeById(fileTree, selectedNodeId);
       if (selectedNode) {
         parentPath = selectedNode.name.endsWith("/")
           ? selectedNode.path
           : getParentPath(selectedNode.path);
       }
-    } else {
-      parentPath = fileTree.path;
-    }
-
-    const newNode = createNode(folderName, true, parentPath);
-    let newTree: TreeNode;
-
-    // 如果没有选中节点,或选中的是根节点
-    if (!selectedNodeId || isRoot(fileTree, selectedNodeId)) {
-      treeRef.current?.expandNode(fileTree.id);
-      newTree = {
-        ...fileTree,
-        children: [...(fileTree.children || []), newNode],
-      };
-    } else {
-      newTree = processNode(fileTree, selectedNodeId, newNode);
+      const newNode = createNode(folderName, false, parentPath);
       treeRef.current?.expandNode(selectedNodeId);
+      newTree = processNode(fileTree, selectedNodeId, newNode);
     }
-
     // 更新状态
     setFileTree(newTree);
     const newText = treeToMarkdown(newTree);
@@ -453,6 +418,7 @@ function App() {
       { tree: newTree, selectedNodeIds, lastSelectedId },
       { content: newText, isValid: true, error: null }
     );
+    return;
   };
 
   const treeRef = useRef<TreeNodeRef>(null);
@@ -589,7 +555,7 @@ function App() {
                       size="icon"
                       className="w-8 h-8" // icon 本来是9，调小一点
                       onClick={() => handleAddFile()}
-                      disabled={selectedNodeIds.length !== 1}
+                      disabled={selectedNodeIds.length > 1 || isTreeLocked}
                     >
                       <FilePlus />
                     </Button>
@@ -597,13 +563,14 @@ function App() {
                       size="icon"
                       className="w-8 h-8" // icon 本来是9，调小一点
                       onClick={() => handleAddFolder()}
-                      disabled={selectedNodeIds.length !== 1}
+                      disabled={selectedNodeIds.length > 1 || isTreeLocked}
                     >
                       <FolderPlus />
                     </Button>
                     <Button
                       size="icon"
                       className="w-8 h-8" // icon 本来是9，调小一点
+                      disabled={isTreeLocked}
                       onClick={() => treeRef.current?.collapseAll()}
                     >
                       <ChevronsDownUp />
@@ -613,10 +580,7 @@ function App() {
                       className="w-8 h-8" // icon 本来是9，调小一点
                       variant="destructive"
                       onClick={deleteNode}
-                      disabled={
-                        selectedNodeIds.length === 0 ||
-                        isRoot(fileTree, selectedNodeIds[0])
-                      }
+                      disabled={selectedNodeIds.length === 0 || isTreeLocked}
                     >
                       <Trash2 />
                     </Button>
@@ -624,7 +588,7 @@ function App() {
                   <div className="flex-1 overflow-auto min-h-0">
                     <TreeNodeComponent
                       ref={treeRef}
-                      node={fileTree}
+                      nodes={fileTree}
                       onUpdate={updateNode}
                       selectedNodeIds={selectedNodeIds}
                       onSelectNode={(id, ctrlKey, shiftKey) =>
@@ -665,15 +629,14 @@ function App() {
 export default App;
 
 // 添加辅助函数
-const findNodeById = (tree: TreeNode, id: string): TreeNode | null => {
-  if (tree.id === id) return tree;
-  if (!tree.children) return null;
-
-  for (const child of tree.children) {
-    const found = findNodeById(child, id);
-    if (found) return found;
-  }
-
+const findNodeById = (tree: TreeNode[], id: string): TreeNode | null => {
+  tree.forEach((cur) => {
+    if (cur.id === id) return cur;
+    if (cur.children) {
+      const found = findNodeById(cur.children, id);
+      if (found) return found;
+    }
+  });
   return null;
 };
 

@@ -1,7 +1,14 @@
 import { TreeNode } from "@/typings";
 import { generateId } from "./global";
 
-const generateAscii = (
+const generateAscii = (nodes: TreeNode[]) => {
+  const asciiText = nodes
+    .map((node) => generateAsciiFromSingleNode(node))
+    .join("");
+  return asciiText;
+};
+
+const generateAsciiFromSingleNode = (
   node: TreeNode,
   prefix = "",
   isLast = true,
@@ -27,82 +34,111 @@ const generateAscii = (
         newPrefix = prefix + (isLast ? "    " : "│   ");
       }
       const isLastChild = index === node.children!.length - 1;
-      result += generateAscii(child, newPrefix, isLastChild, false);
+      result += generateAsciiFromSingleNode(
+        child,
+        newPrefix,
+        isLastChild,
+        false
+      );
     });
   }
 
   return result;
 };
 
-function parseAsciiTree(asciiText: string): TreeNode {
+function parseAsciiTree(asciiText: string): TreeNode[] {
   const lines = asciiText.split("\n").filter((line) => line.trim());
+  const roots: TreeNode[] = [];
+  const stack: { node: TreeNode; level: number }[] = [];
 
-  // First line as root node
-  const rootName = lines[0];
-  const root: TreeNode = {
-    id: generateId(),
-    name: rootName,
-    path: rootName,
-    children: [],
-  };
+  lines.forEach((line) => {
+    // 修正后的正则表达式：
+    // 使用 '─'（U+2500）代替 '-', 确保匹配 '├── ' 和 '└── '
+    const regex = /^((?:│   |    )*)(?:[├└]─{2,}\s+)(.*)$/;
+    const match = line.match(regex);
 
-  const stack: { node: TreeNode; level: number }[] = [
-    { node: root, level: -1 },
-  ];
+    if (match) {
+      const indentBlocks = match[1];
+      const name = match[2].trim();
 
-  lines.slice(1).forEach((line) => {
-    const indent = line.match(/^[\s│]*(?:├──|└──|)/)?.[0].length || 0;
-    const level = Math.floor(indent / 4);
+      // 计算缩进块的数量，每个 "│   " 或 "    " 块代表一级缩进
+      const indentBlockPattern = /(?:│   |    )/g;
+      const indentMatches = indentBlocks.match(indentBlockPattern);
+      const numIndent = indentMatches ? indentMatches.length : 0;
 
-    // 提取节点名称，去除前缀符号
-    const name = line.replace(/^[\s│]*(├──|└──)\s*/, "").trim();
+      // 当前节点的层级为缩进块数 +1（因为有分支符号）
+      const level = numIndent + 1;
 
-    // 回溯堆栈找到正确的父节点
-    while (stack.length > 1 && stack[stack.length - 1].level >= level) {
-      stack.pop();
+      const isFolder = name.endsWith("/");
+
+      const newNode: TreeNode = {
+        id: generateId(),
+        name: name,
+        path: "",
+        // children 仅在有子节点时添加
+      };
+
+      // 找到正确的父节点：栈中最后一个层级 < 当前层级的节点
+      while (stack.length > 0 && stack[stack.length - 1].level >= level) {
+        stack.pop();
+      }
+
+      if (stack.length === 0) {
+        throw new Error(`Cannot find parent for node: ${name}`);
+      }
+
+      const parent = stack[stack.length - 1].node;
+      const parentPath = parent.path.endsWith("/")
+        ? parent.path
+        : `${parent.path}/`;
+      const path = isFolder
+        ? `${parentPath}${name.slice(0, -1)}/`
+        : `${parentPath}${name}`;
+
+      newNode.path = path;
+
+      if (!parent.children) {
+        parent.children = [];
+      }
+
+      parent.children.push(newNode);
+
+      // 将新节点推入栈
+      stack.push({ node: newNode, level });
+    } else {
+      // 如果没有分支符号，认为是根节点
+      const name = line.trim();
+      const isFolder = name.endsWith("/");
+      const newNode: TreeNode = {
+        id: generateId(),
+        name: isFolder ? name : name,
+        path: isFolder ? name.slice(0, -1) + "/" : name,
+        // children 未设置，默认为 undefined
+      };
+      roots.push(newNode);
+      stack.length = 0; // 清空栈
+      stack.push({ node: newNode, level: 0 });
     }
-
-    const parent = stack[stack.length - 1].node;
-    const path = parent.path.endsWith("/")
-      ? `${parent.path}${name}`
-      : `${parent.path}/${name}`;
-
-    // 创建新节点
-    const newNode: TreeNode = {
-      id: generateId(),
-      name,
-      path,
-      children: [],
-    };
-
-    if (!parent.children) parent.children = [];
-    parent.children.push(newNode);
-
-    stack.push({ node: newNode, level });
   });
 
-  // 添加处理函数：递归遍历树，为有子节点的节点添加/
+  // 递归遍历树，为有子节点的节点名称和路径添加斜杠 "/"
   const processNode = (node: TreeNode) => {
-    // 如果节点有子节点且名称没有以/结尾，则添加/
     if (node.children && node.children.length > 0 && !node.name.endsWith("/")) {
-      node.name = node.name + "/";
-
-      // 同时更新 path
+      node.name += "/";
       if (!node.path.endsWith("/")) {
-        node.path = node.path + "/";
+        node.path += "/";
       }
     }
 
-    // 递归处理所有子节点
     if (node.children) {
-      node.children.forEach(processNode);
+      node.children.forEach((child) => processNode(child));
     }
   };
 
-  // 处理整个树
-  processNode(root);
+  // 处理所有根节点
+  roots.forEach((root) => processNode(root));
 
-  return root;
+  return roots;
 }
 
 function isValidAsciiTree(text: string): boolean {
@@ -117,88 +153,67 @@ function isValidAsciiTree(text: string): boolean {
     rootLine.includes("└") ||
     rootLine.includes("─")
   ) {
-    return false;
+    return false; // Root node should not contain branch symbols
   }
 
-  // 用 Map 存储每个缩进级别的节点名称集合
-  const levelNodes = new Map<number, Set<string>>();
-  levelNodes.set(0, new Set([rootLine]));
+  // 用栈来跟踪每个层级的节点名称集合，防止同级重复名称
+  const nameStack: Set<string>[] = [];
+  nameStack.push(new Set([rootLine]));
 
-  // 2. Validate subsequent lines
-  let lastIndentLevel = 0;
+  // 初始化缩进堆栈，表示当前的缩进层级
   const indentStack: number[] = [0];
 
+  // 2. Validate subsequent lines
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
 
-    // Basic format check: remove trailing slash before validation
-    const cleanLine = line.replace(/\/$/, "");
-    const indentMatch = cleanLine.match(/^(\s*(│\s+)*)(├──|└──)\s+\S.*?$/);
-    if (!indentMatch) return false;
+    const regex = /^((?:│   |    )*)(?:[├└]── )(.+)$/;
+    const match = line.match(regex);
 
-    // Calculate current line's indent level
-    const indent = line.search(/[^\s│]/);
-    const indentLevel = Math.floor(indent / 4);
+    if (!match) {
+      // Handle new root nodes or invalid lines as before
+      // ...
+      return false; // For simplicity, assuming no additional root nodes
+    }
 
-    // Check if indent is reasonable
-    if (indent % 4 !== 0) return false;
+    const indentBlocks = match[1];
+    const nodeName = match[2].trim();
 
-    // Check if indent level change is reasonable
-    if (indentLevel > lastIndentLevel + 1) return false;
+    const indentBlockPattern = /(?:│   |    )/g;
+    const indentMatches = indentBlocks.match(indentBlockPattern);
+    const numIndent = indentMatches ? indentMatches.length : 0;
 
-    // If indent decreases, update indent stack and clear higher level nodes
+    const level = numIndent + 1;
+
+    // 检查缩进级别是否合理（不能跳级）
+    const lastIndentLevel = indentStack[indentStack.length - 1];
+    if (level > lastIndentLevel + 1) {
+      return false; // 缩进级别跳跃，返回 false
+    }
+
+    // 调整堆栈
     while (
       indentStack.length > 0 &&
-      indentLevel < indentStack[indentStack.length - 1]
+      level <= indentStack[indentStack.length - 1]
     ) {
-      const poppedLevel = indentStack.pop()!;
-      // 清理更高层级的节点集合
-      for (let level = poppedLevel; level > indentLevel; level--) {
-        levelNodes.delete(level);
-      }
+      indentStack.pop();
+      nameStack.pop();
     }
 
-    // Extract node name
-    const nodeName = line
-      .substring(indent)
-      .replace(/(├──|└──)\s*/, "")
-      .trim();
-
-    // Check for duplicate names at the same level
-    if (!levelNodes.has(indentLevel)) {
-      levelNodes.set(indentLevel, new Set());
+    if (indentStack.length === 0) {
+      return false; // 无法找到父节点，返回 false
     }
-    const currentLevelNodes = levelNodes.get(indentLevel)!;
+
+    // 检查当前层级是否有重复的节点名称
+    const currentLevelNodes = nameStack[nameStack.length - 1];
     if (currentLevelNodes.has(nodeName)) {
-      return false; // 发现重复名称
+      return false; // 同级节点名称重复，返回 false
     }
     currentLevelNodes.add(nodeName);
 
-    // Check vertical line positions
-    const prefixPart = line.substring(0, indent);
-    const expectedPipes = indentLevel;
-    const actualPipes = (prefixPart.match(/│/g) || []).length;
-
-    if (actualPipes > expectedPipes) return false;
-
-    // Check lines after └──
-    if (i > 0 && lines[i - 1].includes("└──")) {
-      const prevIndent = lines[i - 1].search(/[^\s│]/);
-      const prevPart = lines[i - 1].substring(0, prevIndent);
-      const currentPart = line.substring(0, prevIndent);
-
-      if (
-        line.length > prevIndent &&
-        currentPart.split("│").length > prevPart.split("│").length
-      ) {
-        return false;
-      }
-    }
-
-    lastIndentLevel = indentLevel;
-    if (line.includes("├──") || line.includes("└──")) {
-      indentStack.push(indentLevel);
-    }
+    // 添加新的层级
+    indentStack.push(level);
+    nameStack.push(new Set());
   }
 
   return true;

@@ -21,7 +21,7 @@ interface TextState {
 }
 
 interface TreeState {
-  tree: TreeNode;
+  tree: TreeNode[];
   selectedNodeIds: string[];
   lastSelectedId: string | null;
 }

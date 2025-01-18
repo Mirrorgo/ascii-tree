@@ -24,8 +24,8 @@ type AsciiTreePanelProps = {
   isAsciiTreeCollapse: boolean;
   setIsAsciiTreeCollapse: Dispatch<SetStateAction<boolean>>;
   showExplorerPanel: boolean;
-  fileTree: TreeNode;
-  generateAscii: (fileTree: TreeNode) => string;
+  fileTree: TreeNode[];
+  generateAscii: (fileTree: TreeNode[]) => string;
 };
 
 const AsciiTreePanel = ({

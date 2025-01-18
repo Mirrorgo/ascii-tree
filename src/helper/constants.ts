@@ -253,59 +253,48 @@ const PROJECT_TEMPLATES = {
   },
 } as const;
 
-const INITIAL_TREE: TreeNode = {
-  id: "root",
-  name: "root/",
-  path: "root/",
-  children: [
-    {
-      id: "1",
-      name: "folder1/",
-      path: "root/folder1/",
-      children: [
-        {
-          id: "2",
-          name: "file1",
-          path: "root/folder1/file1",
-        },
-        {
-          id: "3",
-          name: "file2",
-          path: "root/folder1/file2",
-        },
-      ],
-    },
-    {
-      id: "4",
-      name: "folder2/",
-      path: "root/folder2/",
-      children: [
-        {
-          id: "5",
-          name: "file3",
-          path: "root/folder2/file3",
-        },
-        {
-          id: "6",
-          name: "file4",
-          path: "root/folder2/file6",
-        },
-      ],
-    },
-  ],
-};
+const INITIAL_TREE: TreeNode[] = [
+  {
+    id: "root",
+    name: "root/",
+    path: "root/",
+    children: [
+      {
+        id: "1",
+        name: "folder1/",
+        path: "root/folder1/",
+        children: [
+          {
+            id: "2",
+            name: "file1",
+            path: "root/folder1/file1",
+          },
+          {
+            id: "3",
+            name: "file2",
+            path: "root/folder1/file2",
+          },
+        ],
+      },
+      {
+        id: "4",
+        name: "folder2/",
+        path: "root/folder2/",
+        children: [
+          {
+            id: "5",
+            name: "file3",
+            path: "root/folder2/file3",
+          },
+          {
+            id: "6",
+            name: "file4",
+            path: "root/folder2/file6",
+          },
+        ],
+      },
+    ],
+  },
+];
 
-export {
-  BASIC_ASCII_TREE_TEMPLATE,
-  VITE_REACT_TEMPLATE,
-  VITE_VUE_TEMPLATE,
-  NEXTJS_APP_TEMPLATE,
-  NEXTJS_PAGES_TEMPLATE,
-  T3_APP_TEMPLATE,
-  MONOREPO_TEMPLATE,
-  REMIX_TEMPLATE,
-  ASTRO_TEMPLATE,
-  SVELTEKIT_TEMPLATE,
-  PROJECT_TEMPLATES,
-  INITIAL_TREE,
-};
+export { PROJECT_TEMPLATES, INITIAL_TREE };

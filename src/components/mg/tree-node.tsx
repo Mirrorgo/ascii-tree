@@ -31,7 +31,7 @@ export interface TreeNodeRef {
 }
 
 interface TreeNodeProps {
-  node: TreeNode;
+  nodes: TreeNode[];
   level?: number;
   onUpdate: (id: string, newName: string) => void;
   selectedNodeIds: string[];
@@ -53,18 +53,17 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
     const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 
     // Get all folder IDs recursively
-    const getAllFolderIds = useCallback((node: TreeNode): string[] => {
-      console.log("getAllFolderIds called with node:", node);
-      const folderIds: string[] = [];
-      if (node.name.endsWith("/")) {
-        folderIds.push(node.id);
-      }
-      if (node.children) {
-        node.children.forEach((child) => {
-          folderIds.push(...getAllFolderIds(child));
-        });
-      }
-      return folderIds;
+    const getAllFolderIds = useCallback((nodes: TreeNode[]): string[] => {
+      // console.log("getAllFolderIds called with node:", node);
+      return nodes.reduce((folderIds: string[], node) => {
+        if (node.name.endsWith("/")) {
+          folderIds.push(node.id);
+        }
+        if (node.children) {
+          folderIds.push(...getAllFolderIds(node.children));
+        }
+        return folderIds;
+      }, []);
     }, []);
 
     // Find parent node
@@ -93,7 +92,7 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
         },
         collapseAll: () => {
           console.log("collapseAll called");
-          const allFolderIds = getAllFolderIds(props.node);
+          const allFolderIds = getAllFolderIds(props.nodes);
           console.log("Found folder IDs:", allFolderIds);
           setCollapsedNodes(new Set(allFolderIds));
         },
@@ -101,14 +100,36 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
           setCollapsedNodes((prev) => {
             const next = new Set(prev);
             next.delete(nodeId);
-            let parent = findParentNode(props.node, nodeId);
+
+            // Find parent node recursively in all nodes
+            const findParent = (
+              nodes: TreeNode[],
+              nodeId: string
+            ): TreeNode | null => {
+              for (const node of nodes) {
+                if (node.id === nodeId) return null; // Current node doesn't have a parent
+                if (node.children) {
+                  if (node.children.some((child) => child.id === nodeId)) {
+                    return node; // Parent node found
+                  }
+                  const parent = findParent(node.children, nodeId);
+                  if (parent) return parent; // Recursive call to find parent in nested nodes
+                }
+              }
+              return null; // No parent found
+            };
+
+            // Find the parent node from the root (or root nodes)
+            let parent = findParent(props.nodes, nodeId);
             while (parent) {
-              next.delete(parent.id);
-              parent = findParentNode(props.node, parent.id);
+              next.delete(parent.id); // Remove parent from collapsed set
+              parent = findParent(props.nodes, parent.id); // Continue up the tree
             }
+
             return next;
           });
         },
+
         collapseNode: (nodeId: string) => {
           setCollapsedNodes((prev) => {
             const next = new Set(prev);
@@ -117,7 +138,7 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
           });
         },
       }),
-      [props.node, getAllFolderIds, findParentNode]
+      [props.nodes, getAllFolderIds, findParentNode]
     );
 
     // Recursive render function
@@ -233,7 +254,7 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
       [collapsedNodes, editingNodeId, props]
     );
 
-    return renderNode(props.node);
+    return props.nodes.map((node: TreeNode) => renderNode(node));
   }
 );
 
