@@ -89,20 +89,6 @@ svg的支持当前图像下载和标准图像下载
 嵌入mdshown, 以folder形式
 
 ## 模板
-支持项目模板功能，点击后选择比如 vite/react 即可创建对应的项目模板
-
-从md文档直接读取无序列表，方便网友贡献模板
-
-
-后续增加从自己的无需列表直接输入，这样一些不方便传上去的也能用了，比如自己公司内网的
-
-
-
-> 因为存在文本编辑器部分编辑失败的情况，所以应该是双数据源
-> 而且,双数据源
-
-
-支持区分folder和普通文件, 支持注释
 ```
 company-project/              # 公司总项目目录
   ├── main-egg-project/      # 原有的 egg 项目
@@ -126,7 +112,6 @@ TODO
   - 之后补上save name的时候的同级重名节点的validator
 - 抽离出复用的validator,目前每个部分validator都是分离的
 - slash之前不能有空格
-- 支持注释
 
 ```
 company-project/              
@@ -142,8 +127,6 @@ company-project/
       ├── package.json     
       └── src/
 ```
-folder 变成蓝色
-
 
 ```
 .gitignore
@@ -205,34 +188,39 @@ tsconfig.app.json
 tsconfig.json
 tsconfig.node.json
 vite.config.ts
-
-
 ```
 
 
 可以用 https://tree.uncenter.dev/ 配合， 是否还要自己实现这个project的功能？
 
-
-目前generate from existing的时候会去掉结尾的 / 
-
-future: 记录产生的是文件还是文件夹
-没有标注 / 的则按照先前的规则,有子级的就是folder,没有的是文件.
-然后在md 视图永远展示 / , 且没有 / & 有子级 会报错
-
-folder那边用图标表示, 不展示 / 
-
-ascii-tree那边生成的默认带有 / , 但是可以关闭掉 / 
-
-
-文件夹和文件的颜色不一样在ascii-tree这边看的话
-
-
-
 enable comment in file and get gitignore as directoryIgnore
 
 
-支持自动添加 /
 
-批量tab
+推广之前必须做的事情
+- 新建node时手动填入内容，光标移动过去
+- 批量tab和un tab
+- 支持自动添加 /
+- 支持注释
+- 支持强制解析
+- 没有已知bug
+- 支持中文
+- 版本号1.0
+- contribution之前先发个issue告知一声，看看需不需要，以及是否和我做重了
+  - 对于不希望加的功能，提议自己fork
 
-支持quick fix
+推广后feature
+- 手机兼容
+- 丰富的节点图标
+- 波浪线划出报错的部分
+  - 一个小的弹出窗口来告诉是什么错误
+- 支持quick fix
+- ai powered format
+  - ai fix ascii tree
+  - 限额时的提示，从一个云函数或者云端数据库配置
+- 右侧更新记录
+- pwa
+- folder view选定后 sort文件夹下all内容
+- 节点拖拽排序
+- 从md文档直接读取无序列表，方便网友贡献模板
+  - 后续增加从自己的无需列表直接输入，这样一些不方便传上去的也能用了，比如自己公司内网的

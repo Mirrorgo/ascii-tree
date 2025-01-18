@@ -204,26 +204,57 @@ describe("Tree ASCII Processing", () => {
 
   describe("isValidAsciiTree", () => {
     it("should validate correct ASCII tree format", () => {
-      expect(isValidAsciiTree(expectedAscii)).toBe(true);
+      expect(isValidAsciiTree(expectedAscii).valid).toBe(true);
     });
 
     it("should validate single node tree", () => {
-      expect(isValidAsciiTree("SingleNode")).toBe(true);
+      expect(isValidAsciiTree("SingleNode").valid).toBe(true);
     });
 
     it("should reject empty string", () => {
-      expect(isValidAsciiTree("")).toBe(false);
+      const result = isValidAsciiTree("");
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContainEqual({
+        content: "Input is empty",
+        location: {
+          column: 0,
+          line: 0,
+        },
+        type: "Empty Input",
+      });
     });
 
     it("should reject invalid tree format", () => {
-      expect(isValidAsciiTree("├── Invalid Root")).toBe(false);
+      const result = isValidAsciiTree("├── Invalid Root");
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          content: "Node at line 1 has no valid parent",
+          location: {
+            column: 1,
+            line: 1,
+          },
+          type: "Orphan Node",
+        })
+      );
     });
 
     it("should reject malformed branch symbols", () => {
       const invalidTree = `Root
-  ├─── Invalid
-  └── Valid`;
-      expect(isValidAsciiTree(invalidTree)).toBe(false);
+├─── Invalid
+└── Valid`;
+      const result = isValidAsciiTree(invalidTree);
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          type: "Invalid Line Format",
+          content: "Malformed branch symbol at line 2",
+          location: {
+            column: 1,
+            line: 2,
+          },
+        })
+      );
     });
 
     it("should handle multiple levels correctly", () => {
@@ -233,15 +264,44 @@ describe("Tree ASCII Processing", () => {
 │   └── Level2B
 └── Level1B
     └── Level2C`;
-      expect(isValidAsciiTree(validTree)).toBe(true);
+      expect(isValidAsciiTree(validTree).valid).toBe(true);
     });
 
     it("should reject ASCII tree with duplicate sibling names at the same level", () => {
-      const asciiTree = `root/
+      const invalidTree = `root/
 ├── file1
 ├── file1
 └── file1`;
-      expect(isValidAsciiTree(asciiTree)).toBe(false);
+      const result = isValidAsciiTree(invalidTree);
+
+      // Check that the tree is invalid
+      expect(result.valid).toBe(false);
+
+      // Ensure the correct number of errors
+      expect(result.errors.length).toBe(2);
+
+      // Check for the specific errors
+      expect(result.errors[0]).toEqual(
+        expect.objectContaining({
+          type: "Duplicate Node Name",
+          content: "Duplicate node name 'file1' at line 3",
+          location: {
+            column: 1,
+            line: 3,
+          },
+        })
+      );
+
+      expect(result.errors[1]).toEqual(
+        expect.objectContaining({
+          type: "Duplicate Node Name",
+          content: "Duplicate node name 'file1' at line 4",
+          location: {
+            column: 1,
+            line: 4,
+          },
+        })
+      );
     });
 
     it("should reject ASCII tree with duplicate root nodes", () => {
@@ -249,7 +309,18 @@ describe("Tree ASCII Processing", () => {
 └── file1
 root/
 └── file2`;
-      expect(isValidAsciiTree(asciiTree)).toBe(false);
+      const result = isValidAsciiTree(asciiTree);
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({
+          content: "Duplicate root node name 'root/' at line 3",
+          location: {
+            column: 1,
+            line: 3,
+          },
+          type: "Duplicate Node Name",
+        })
+      );
     });
 
     it("should accept same node names under different parents", () => {
@@ -258,51 +329,19 @@ root/
 │   └── child
 └── parent2/
     └── child`;
-      expect(isValidAsciiTree(asciiTree)).toBe(true);
+      expect(isValidAsciiTree(asciiTree).valid).toBe(true);
     });
 
-    //     it("should throw an error when parsing ASCII tree with multiple root nodes", () => {
-    //       const asciiTree = `root1/
-    // ├── child1
-    // └── child2
-    // root2/
-    // └── child3`;
-    //       expect(parseAsciiTree(asciiTree)).toBeUndefined();
-    //     });
-
-    //     it("should throw an error when parsing ASCII tree with invalid branch symbols", () => {
-    //       const asciiTree = `root/
-    // ├─── child1
-    // └─ child2`;
-    //       expect(parseAsciiTree(asciiTree)).toBeNull();
-    //     });
-
-    //     it("should throw an error when parsing ASCII tree with inconsistent indentation", () => {
-    //       const asciiTree = `root/
-    // ├── child1
-    //     └── child2`; // 缩进不一致
-    //       expect(() => parseAsciiTree(asciiTree)).toThrow(
-    //         /Invalid ASCII tree format/
-    //       );
-    //     });
-
-    //     it("should throw an error when parsing ASCII tree with incorrect vertical lines", () => {
-    //       const asciiTree = `root/
-    // ├── child1
-    // │ └── child2`; // 第二层缺少对齐的垂直线
-    //       expect(() => parseAsciiTree(asciiTree)).toThrow(
-    //         /Invalid ASCII tree format/
-    //       );
-    //     });
-
-    //     it("should throw an error when parsing ASCII tree with child appearing before parent", () => {
-    //       const asciiTree = `root/
-    //     └── child1
-    // └── child2`; // child1 应该在 root 下，但缩进不正确
-    //       expect(() => parseAsciiTree(asciiTree)).toThrow(
-    //         /Invalid ASCII tree format/
-    //       );
-    //     });
+    it("should validate multiple root nodes correctly", () => {
+      const asciiTree = `Root1/
+├── Child1
+└── Child2
+Root2/
+├── ChildA/
+│   └── GrandchildA
+└── ChildB`;
+      expect(isValidAsciiTree(asciiTree).valid).toBe(true);
+    });
   });
   describe("Path Generation", () => {
     it("should handle deep nesting with consistent paths", () => {

@@ -323,8 +323,9 @@ function App() {
   function handleParseAsciiTree(): void {
     const asciiText = asciiTreeTextAreaRef.current?.value;
     if (!asciiText) return;
+    const validateResult = isValidAsciiTree(asciiText);
 
-    if (isValidAsciiTree(asciiText)) {
+    if (validateResult.valid) {
       try {
         resetEditorFromAsciiTree(asciiText);
       } catch (error) {
@@ -334,7 +335,9 @@ function App() {
         console.error("Error parsing ASCII tree:", error);
       }
     } else {
-      setAsciiParseError("Invalid ASCII tree format. Please check your input.");
+      const err = validateResult.errors[0];
+      const errMsg = `${err.type}: ${err.content}`;
+      setAsciiParseError(errMsg);
     }
   }
 

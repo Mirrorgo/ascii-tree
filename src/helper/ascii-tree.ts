@@ -1,4 +1,4 @@
-import { TreeNode } from "@/typings";
+import { ParseError, TreeNode } from "@/typings";
 import { generateId } from "./global";
 
 const generateAscii = (nodes: TreeNode[]) => {
@@ -141,82 +141,172 @@ function parseAsciiTree(asciiText: string): TreeNode[] {
   return roots;
 }
 
-function isValidAsciiTree(text: string): boolean {
-  const lines = text.split("\n").filter((line) => line.trim());
-  if (lines.length === 0) return false;
+function isValidAsciiTree(text: string): {
+  valid: boolean;
+  errors: ParseError[];
+} {
+  const lines = text.split("\n").filter((l) => l.trim());
+  const errors: ParseError[] = [];
 
-  // 1. Validate root node - consider trailing slash in validation
-  const rootLine = lines[0].trim().replace(/\/$/, "");
-  if (
-    rootLine.includes("│") ||
-    rootLine.includes("├") ||
-    rootLine.includes("└") ||
-    rootLine.includes("─")
-  ) {
-    return false; // Root node should not contain branch symbols
+  // 记录已出现的根节点名称，用于检测重复
+  const globalRootNames = new Set<string>();
+
+  interface StackItem {
+    name: string;
+    level: number;
+    siblings: Set<string>;
+  }
+  const stack: StackItem[] = [];
+
+  if (lines.length === 0) {
+    return {
+      valid: false,
+      errors: [
+        {
+          type: "Empty Input",
+          content: "Input is empty",
+          location: { line: 0, column: 0 },
+        },
+      ],
+    };
   }
 
-  // 用栈来跟踪每个层级的节点名称集合，防止同级重复名称
-  const nameStack: Set<string>[] = [];
-  nameStack.push(new Set([rootLine]));
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const lineNumber = i + 1;
 
-  // 初始化缩进堆栈，表示当前的缩进层级
-  const indentStack: number[] = [0];
-
-  // 2. Validate subsequent lines
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-
-    const regex = /^((?:│   |    )*)(?:[├└]── )(.+)$/;
-    const match = line.match(regex);
-
-    if (!match) {
-      // Handle new root nodes or invalid lines as before
-      // ...
-      return false; // For simplicity, assuming no additional root nodes
+    // ========== 1) 拆分缩进部分和剩余部分 ==========
+    const indentRegex = /^((?:│   |    )*)(.*)$/;
+    const indentMatch = rawLine.match(indentRegex);
+    if (!indentMatch) {
+      errors.push({
+        type: "Invalid Line Format",
+        content: `Invalid line format at line ${lineNumber}`,
+        location: { line: lineNumber, column: 1 },
+      });
+      continue;
     }
 
-    const indentBlocks = match[1];
-    const nodeName = match[2].trim();
+    const indentBlocks = indentMatch[1] ?? "";
+    let remainder = indentMatch[2] ?? "";
+    remainder = remainder.trimEnd();
 
-    const indentBlockPattern = /(?:│   |    )/g;
-    const indentMatches = indentBlocks.match(indentBlockPattern);
-    const numIndent = indentMatches ? indentMatches.length : 0;
+    // 计算缩进块数
+    const blockPattern = /(?:│   |    )/g;
+    const matchedBlocks = indentBlocks.match(blockPattern);
+    const baseIndent = matchedBlocks ? matchedBlocks.length : 0;
 
-    const level = numIndent + 1;
+    // ========== 2) 判断是否有合法的分支符(├──/└──) ==========
+    const strictBranchRegex = /^(?:[├└]── )(.*)$/;
+    const branchMatch = remainder.match(strictBranchRegex);
 
-    // 检查缩进级别是否合理（不能跳级）
-    const lastIndentLevel = indentStack[indentStack.length - 1];
-    if (level > lastIndentLevel + 1) {
-      return false; // 缩进级别跳跃，返回 false
+    let hasBranch = false;
+    let nodeName = remainder; // 默认等于 remainder，再做修正
+
+    if (branchMatch) {
+      // 确实匹配到 "├── " 或 "└── "
+      hasBranch = true;
+      nodeName = branchMatch[1].trim();
+    } else {
+      // 如果 remainder 中有 '├' 或 '└' 但没匹配到严格的 "── "
+      // 比如 "├───" 或 "└─" 等 => 视为无效格式
+      if (/^[├└]/.test(remainder)) {
+        errors.push({
+          type: "Invalid Line Format",
+          content: `Malformed branch symbol at line ${lineNumber}`,
+          location: { line: lineNumber, column: indentBlocks.length + 1 },
+        });
+        continue;
+      }
     }
 
-    // 调整堆栈
-    while (
-      indentStack.length > 0 &&
-      level <= indentStack[indentStack.length - 1]
-    ) {
-      indentStack.pop();
-      nameStack.pop();
-    }
+    // ========== 3) 计算 level ==========
+    // 若有分支符 => level = baseIndent + 1，否则 => baseIndent
+    const level = hasBranch ? baseIndent + 1 : baseIndent;
 
-    if (indentStack.length === 0) {
-      return false; // 无法找到父节点，返回 false
-    }
+    // ========== 4) 根节点 vs 子节点 ==========
+    if (level === 0) {
+      // 根节点
+      const rootName = nodeName.trim();
+      if (globalRootNames.has(rootName)) {
+        errors.push({
+          type: "Duplicate Node Name",
+          content: `Duplicate root node name '${rootName}' at line ${lineNumber}`,
+          location: { line: lineNumber, column: indentBlocks.length + 1 },
+        });
+      } else {
+        globalRootNames.add(rootName);
+      }
 
-    // 检查当前层级是否有重复的节点名称
-    const currentLevelNodes = nameStack[nameStack.length - 1];
-    if (currentLevelNodes.has(nodeName)) {
-      return false; // 同级节点名称重复，返回 false
-    }
-    currentLevelNodes.add(nodeName);
+      // 重置栈
+      stack.length = 0;
+      stack.push({
+        name: rootName,
+        level,
+        siblings: new Set([rootName]),
+      });
+    } else {
+      // 子节点
+      // 4.1 若 stack 为空 => 无法确定父节点 => 报错
+      if (stack.length === 0) {
+        errors.push({
+          type: "Orphan Node",
+          content: `Node at line ${lineNumber} has no valid parent`,
+          location: { line: lineNumber, column: indentBlocks.length + 1 },
+        });
+        continue;
+      }
 
-    // 添加新的层级
-    indentStack.push(level);
-    nameStack.push(new Set());
+      // 4.2 检查缩进跳跃
+      const top = stack[stack.length - 1];
+      if (level > top.level + 1) {
+        errors.push({
+          type: "Invalid Indentation",
+          content: `Indentation skipped levels at line ${lineNumber}`,
+          location: { line: lineNumber, column: indentBlocks.length + 1 },
+        });
+        continue;
+      }
+
+      // 4.3 弹出 >= 当前 level 的节点
+      while (stack.length > 0 && stack[stack.length - 1].level >= level) {
+        stack.pop();
+      }
+
+      if (stack.length === 0) {
+        errors.push({
+          type: "Orphan Node",
+          content: `Node at line ${lineNumber} has no valid parent`,
+          location: { line: lineNumber, column: indentBlocks.length + 1 },
+        });
+        continue;
+      }
+
+      // 4.4 同级重复检测
+      const parent = stack[stack.length - 1];
+      if (parent.siblings.has(nodeName)) {
+        errors.push({
+          type: "Duplicate Node Name",
+          content: `Duplicate node name '${nodeName}' at line ${lineNumber}`,
+          location: { line: lineNumber, column: indentBlocks.length + 1 },
+        });
+      } else {
+        parent.siblings.add(nodeName);
+      }
+
+      // 4.5 入栈
+      stack.push({
+        name: nodeName,
+        level,
+        siblings: new Set(),
+      });
+    }
   }
 
-  return true;
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
 }
 
 export { generateAscii, parseAsciiTree, isValidAsciiTree };

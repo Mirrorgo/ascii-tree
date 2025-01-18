@@ -1,12 +1,5 @@
-import { MarkdownParseError, ParsedNode, TreeNode } from "@/typings";
+import { ParsedNode, ParseError, TreeNode } from "@/typings";
 import { generateId, generateNodePath } from "./global";
-
-interface ParseError {
-  type: string;
-  message: string;
-  line: number;
-  column: number;
-}
 
 interface ValidationResult {
   level: number;
@@ -57,9 +50,11 @@ const parseMarkdownToNodes = (text: string): ParsedNode[] => {
     if (siblingsSet.has(name)) {
       throw {
         type: "Duplicate Node Name",
-        message: `Duplicate node name '${name}' at line ${lineIndex + 1}`,
-        line: lineIndex + 1,
-        column: line.indexOf(name) + name.length + (isFolder ? 0 : 1),
+        content: `Duplicate node name '${name}' at line ${lineIndex + 1}`,
+        location: {
+          line: lineIndex + 1,
+          column: line.indexOf(name) + name.length + (isFolder ? 0 : 1),
+        },
       } as ParseError;
     }
 
@@ -101,9 +96,11 @@ function parseMarkdownLine(
   if (firstNonSpace === -1) {
     throw {
       type: "Empty Line",
-      message: "Empty line",
-      line: lineIndex + 1,
-      column: 1,
+      content: "Empty line",
+      location: {
+        line: lineIndex + 1,
+        column: 1,
+      },
     } as ParseError;
   }
 
@@ -116,9 +113,11 @@ function parseMarkdownLine(
       // 未找到 '-'
       throw {
         type: "Missing Dash",
-        message: "Line must start with '-' after indentation",
-        line: lineIndex + 1,
-        column: firstNonSpace + 1,
+        content: "Line must start with '-' after indentation",
+        location: {
+          line: lineIndex + 1,
+          column: firstNonSpace + 1,
+        },
       } as ParseError;
     }
 
@@ -127,23 +126,29 @@ function parseMarkdownLine(
     if (!afterDash.startsWith(" ")) {
       throw {
         type: "Missing Space",
-        message: "Dash must be followed by a space",
-        line: lineIndex + 1,
-        column: dashIndex + 2,
+        content: "Dash must be followed by a space",
+        location: {
+          line: lineIndex + 1,
+          column: dashIndex + 2,
+        },
       } as ParseError;
     } else if (!afterDash.slice(1).trim()) {
       throw {
         type: "Missing Content",
-        message: "List item must have content after '- '",
-        line: lineIndex + 1,
-        column: dashIndex + 3,
+        content: "List item must have content after '- '",
+        location: {
+          line: lineIndex + 1,
+          column: dashIndex + 3,
+        },
       } as ParseError;
     } else {
       throw {
         type: "Invalid Format",
-        message: "Invalid line format",
-        line: lineIndex + 1,
-        column: dashIndex + 2,
+        content: "Invalid line format",
+        location: {
+          line: lineIndex + 1,
+          column: dashIndex + 2,
+        },
       } as ParseError;
     }
   }
@@ -154,9 +159,11 @@ function parseMarkdownLine(
   if (indent.length % 2 !== 0) {
     throw {
       type: "Invalid Indentation",
-      message: "Indentation must be multiple of 2 spaces",
-      line: lineIndex + 1,
-      column: indent.length,
+      content: "Indentation must be multiple of 2 spaces",
+      location: {
+        line: lineIndex + 1,
+        column: indent.length,
+      },
     } as ParseError;
   }
 
@@ -164,9 +171,11 @@ function parseMarkdownLine(
   if (!content.trim()) {
     throw {
       type: "Empty Node Name",
-      message: "Node name cannot be empty",
-      line: lineIndex + 1,
-      column: indent.length + 3,
+      content: "Node name cannot be empty",
+      location: {
+        line: lineIndex + 1,
+        column: indent.length + 3,
+      },
     } as ParseError;
   }
 
@@ -181,9 +190,11 @@ function parseMarkdownLine(
       if (nextLineIndent > currentLevel) {
         throw {
           type: "Invalid File Node",
-          message: "File node cannot have children",
-          line: lineIndex + 1,
-          column: indent.length + 3 + nodeName.length,
+          content: "File node cannot have children",
+          location: {
+            line: lineIndex + 1,
+            column: indent.length + 3 + nodeName.length,
+          },
         } as ParseError;
       }
     }
@@ -254,23 +265,15 @@ export function treeToMarkdown(nodes: TreeNode[]): string {
 export function markdownToTree(
   text: string,
   existingTree: TreeNode[] = []
-): { tree: TreeNode[]; error: MarkdownParseError | null } {
+): { tree: TreeNode[]; error: ParseError | null } {
   try {
     const parsedNodes = parseMarkdownToNodes(text);
     const updatedTree = updateTreeNode(parsedNodes, existingTree);
     return { tree: updatedTree, error: null };
   } catch (error) {
-    const parseError = error as ParseError;
     return {
       tree: [],
-      error: {
-        type: parseError.type,
-        location: {
-          line: parseError.line,
-          column: parseError.column,
-        },
-        content: parseError.message,
-      },
+      error: error as ParseError,
     };
   }
 }
