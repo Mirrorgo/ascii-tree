@@ -202,6 +202,7 @@ enable comment in file and get gitignore as directoryIgnore
 - 批量tab和un tab
 - 支持自动添加 /
 - 支持注释
+  - ctrl+/ 切换到注释部分
 - 支持强制解析
 - 没有已知bug
 - 支持中文
@@ -211,6 +212,7 @@ enable comment in file and get gitignore as directoryIgnore
 
 推广后feature
 - 手机兼容
+- 新页面，集成tree命令生成工具，辅助ignore case
 - 丰富的节点图标
 - 波浪线划出报错的部分
   - 一个小的弹出窗口来告诉是什么错误

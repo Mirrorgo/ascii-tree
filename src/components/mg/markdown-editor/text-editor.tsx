@@ -38,7 +38,6 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
   ) => {
     const [content, setContent] = useState<string>(initialValue);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-
     // 踪输入法组合状态
     const isComposingRef = useRef(false);
 
@@ -49,7 +48,7 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
 
       // 计算到目标行之前的所有字符数
       for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
-        position += lines[i].length + 1; // +1 是换行符
+        position += lines[i].length + 1;
       }
 
       // 加上目标行的列位置
@@ -116,38 +115,41 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
 
       const { selectionStart, selectionEnd, value } = textarea;
       const lines: string[] = value.split("\n");
-      const currentLineIndex =
+
+      // 获取选中区域所在的行
+      const startLineIndex =
         value.substring(0, selectionStart).split("\n").length - 1;
-      const currentLine = lines[currentLineIndex];
+      const endLineIndex =
+        value.substring(0, selectionEnd).split("\n").length - 1;
 
       // Alt + Arrow Up/Down for line movement
       if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
         e.preventDefault();
 
-        if (e.key === "ArrowUp" && currentLineIndex > 0) {
+        if (e.key === "ArrowUp" && startLineIndex > 0) {
           const newLines = [...lines];
-          [newLines[currentLineIndex - 1], newLines[currentLineIndex]] = [
-            newLines[currentLineIndex],
-            newLines[currentLineIndex - 1],
+          [newLines[startLineIndex - 1], newLines[startLineIndex]] = [
+            newLines[startLineIndex],
+            newLines[startLineIndex - 1],
           ];
 
           updateContent(newLines.join("\n"), () => {
             const newPosition =
-              selectionStart - lines[currentLineIndex - 1].length - 1;
+              selectionStart - lines[startLineIndex - 1].length - 1;
             textarea.setSelectionRange(newPosition, newPosition);
           });
         }
 
-        if (e.key === "ArrowDown" && currentLineIndex < lines.length - 1) {
+        if (e.key === "ArrowDown" && startLineIndex < lines.length - 1) {
           const newLines = [...lines];
-          [newLines[currentLineIndex], newLines[currentLineIndex + 1]] = [
-            newLines[currentLineIndex + 1],
-            newLines[currentLineIndex],
+          [newLines[startLineIndex], newLines[startLineIndex + 1]] = [
+            newLines[startLineIndex + 1],
+            newLines[startLineIndex],
           ];
 
           updateContent(newLines.join("\n"), () => {
             const newPosition =
-              selectionStart + lines[currentLineIndex + 1].length + 1;
+              selectionStart + lines[startLineIndex + 1].length + 1;
             textarea.setSelectionRange(newPosition, newPosition);
           });
         }
@@ -157,40 +159,55 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
       if (e.key === "Tab") {
         e.preventDefault();
 
-        const listItem = parseListItem(currentLine);
-        if (listItem) {
-          listItem.index = currentLineIndex;
+        // 计算选中区域每一行的起始和结束位置
+        let selectionStartOffset = 0;
+        let selectionEndOffset = 0;
+        const updatedLines = [...lines];
 
-          if (e.shiftKey) {
-            // Unindent: Remove two spaces if they exist at the start
-            if (listItem.indent.length >= 2) {
-              const newIndent = listItem.indent.slice(2);
-              lines[
-                currentLineIndex
+        for (let i = startLineIndex; i <= endLineIndex; i++) {
+          const line = lines[i];
+          const listItem = parseListItem(line);
+
+          if (listItem) {
+            if (e.shiftKey) {
+              // 减少缩进
+              if (listItem.indent.length >= 2) {
+                const newIndent = listItem.indent.slice(2);
+                updatedLines[
+                  i
+                ] = `${newIndent}${listItem.marker}${listItem.content}`;
+
+                // 更新选区偏移量
+                if (i === startLineIndex) selectionStartOffset -= 2;
+                if (i === endLineIndex)
+                  selectionEndOffset -= 2 * (endLineIndex - startLineIndex + 1);
+              }
+            } else {
+              // 增加缩进
+              const newIndent = listItem.indent + "  ";
+              updatedLines[
+                i
               ] = `${newIndent}${listItem.marker}${listItem.content}`;
 
-              updateContent(lines.join("\n"), () => {
-                const newPosition = selectionStart - 2;
-                textarea.setSelectionRange(newPosition, newPosition);
-              });
+              // 更新选区偏移量
+              if (i === startLineIndex) selectionStartOffset += 2;
+              if (i === endLineIndex)
+                selectionEndOffset += 2 * (endLineIndex - startLineIndex + 1);
             }
-          } else {
-            // Indent: Add two spaces at the start
-            const newIndent = listItem.indent + "  ";
-            lines[
-              currentLineIndex
-            ] = `${newIndent}${listItem.marker}${listItem.content}`;
-
-            updateContent(lines.join("\n"), () => {
-              const newPosition = selectionStart + 2;
-              textarea.setSelectionRange(newPosition, newPosition);
-            });
           }
         }
+
+        // 应用更新并调整选区
+        updateContent(updatedLines.join("\n"), () => {
+          const newSelectionStart = selectionStart + selectionStartOffset;
+          const newSelectionEnd = selectionEnd + selectionEndOffset;
+          textarea.setSelectionRange(newSelectionStart, newSelectionEnd);
+        });
       }
 
       // Handle Enter key for list continuation
       if (e.key === "Enter") {
+        const currentLine = lines[startLineIndex];
         const listItem = parseListItem(currentLine);
         if (listItem) {
           e.preventDefault();
@@ -216,7 +233,7 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
             const padding = 16; // p-4 = 16px
             const newLineTop = currentLineIndex * lineHeight + padding;
 
-            // 获取 textarea 的可视区域范围
+            // 获取 textarea 的可视区域范围\
             const visibleTop = textarea.scrollTop;
             const visibleBottom =
               visibleTop + textarea.clientHeight - padding * 2;
