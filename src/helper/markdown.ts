@@ -1,13 +1,16 @@
 import { ParsedNode, ParseError, TreeNode } from "@/typings";
 import { generateId, generateNodePath } from "./global";
+import { EditorConfig } from "@/components/mg/markdown-editor";
 
-interface ValidationResult {
+type ValidationResult = {
   level: number;
   name: string;
-}
+};
+
+const isFolder = (nodeName: string) => nodeName.endsWith("/");
 
 // 主解析函数
-const parseMarkdownToNodes = (text: string): ParsedNode[] => {
+const parseMarkdownToNodes = (text: string): { parsedNodes: ParsedNode[] } => {
   const lines = text.split("\n");
   const parsedNodes: ParsedNode[] = [];
 
@@ -22,8 +25,6 @@ const parseMarkdownToNodes = (text: string): ParsedNode[] => {
     ];
 
   lines.forEach((line, lineIndex) => {
-    if (!line.trim()) return; // 跳过空行
-
     const nextLine = lines[lineIndex + 1];
     let validationResult: ValidationResult;
 
@@ -35,7 +36,6 @@ const parseMarkdownToNodes = (text: string): ParsedNode[] => {
     }
 
     const { level, name } = validationResult;
-    const isFolder = name.endsWith("/");
 
     // 调整堆栈以找到正确的父节点
     while (stack.length > 0 && stack[stack.length - 1].level >= level) {
@@ -53,7 +53,7 @@ const parseMarkdownToNodes = (text: string): ParsedNode[] => {
         content: `Duplicate node name '${name}' at line ${lineIndex + 1}`,
         location: {
           line: lineIndex + 1,
-          column: line.indexOf(name) + name.length + (isFolder ? 0 : 1),
+          column: line.indexOf(name) + name.length + (isFolder(name) ? 0 : 1),
         },
       } as ParseError;
     }
@@ -65,7 +65,7 @@ const parseMarkdownToNodes = (text: string): ParsedNode[] => {
     const newNode: ParsedNode = {
       name,
       path: generateNodePath(parent.path, name),
-      children: isFolder ? [] : undefined,
+      children: isFolder(name) ? [] : undefined,
     };
 
     // 添加新节点到父节点的 children
@@ -73,7 +73,7 @@ const parseMarkdownToNodes = (text: string): ParsedNode[] => {
     parent.children.push(newNode);
 
     // 如果是文件夹，推入堆栈并初始化新的 siblingsSet
-    if (isFolder) {
+    if (isFolder(name)) {
       stack.push({
         node: newNode,
         level,
@@ -82,7 +82,7 @@ const parseMarkdownToNodes = (text: string): ParsedNode[] => {
     }
   });
 
-  return parsedNodes;
+  return { parsedNodes };
 };
 
 // 解析每一行的函数
@@ -167,8 +167,10 @@ function parseMarkdownLine(
     } as ParseError;
   }
 
+  let nodeName = content.trim();
+
   // 检查节点名称是否为空
-  if (!content.trim()) {
+  if (!nodeName) {
     throw {
       type: "Empty Node Name",
       content: "Node name cannot be empty",
@@ -179,10 +181,8 @@ function parseMarkdownLine(
     } as ParseError;
   }
 
-  const nodeName = content.trim();
-
   // 检查文件节点是否有子节点
-  if (!nodeName.endsWith("/")) {
+  if (!isFolder(nodeName)) {
     const currentLevel = indent.length / 2;
     if (nextLine) {
       const nextLineMatch = nextLine.match(/^(\s*)(?:[├└]──\s+|\-\s+)(.+)$/);
@@ -244,6 +244,45 @@ const updateTreeNode = (
   });
 };
 
+const fixMarkdownByConfig = (text: string, config: EditorConfig) => {
+  const lines = text.split("\n");
+  const newLines: string[] = [];
+
+  lines.forEach((line) => {
+    if (!line.trim()) return; // 跳过空行
+    newLines.push(line);
+  });
+
+  newLines.forEach((line, lineIndex) => {
+    if (lineIndex === newLines.length - 1) return; // 最后一行不用检查
+    if (config.autoSlash) {
+      const nextLine = newLines[lineIndex + 1];
+      const { isFixed, fixedLine } = autoSlash(line, nextLine);
+      if (isFixed) newLines[lineIndex] = fixedLine;
+    }
+  });
+  return newLines.join("\n");
+  type AutoSlashResult =
+    | { isFixed: true; fixedLine: string }
+    | { isFixed: false; fixedLine: null };
+  function autoSlash(line: string, nextLine: string): AutoSlashResult {
+    const match = line.match(/^(\s*)-(\s+.+)$/);
+    const nextLineMatch = nextLine.match(/^(\s*)(?:[├└]──\s+|\-\s+)(.+)$/);
+    if (!match || !nextLineMatch) return { isFixed: false, fixedLine: null }; // 交给validator去处理吧
+    const [, indent, content] = match;
+    let nodeName = content.trim();
+    if (isFolder(nodeName)) return { isFixed: false, fixedLine: null }; // 不用改了
+    const currentLevel = indent.length / 2;
+    const nextLineIndent = nextLineMatch ? nextLineMatch[1].length / 2 : 0;
+    if (nextLineIndent > currentLevel) {
+      const fixedLine = line + "/";
+      return { isFixed: true, fixedLine };
+    } else {
+      return { isFixed: false, fixedLine: null };
+    }
+  }
+};
+
 // 公共 API
 export function treeToMarkdown(nodes: TreeNode[]): string {
   return nodes.map((node) => singleNodeToMarkdown(node)).join("");
@@ -264,10 +303,15 @@ export function treeToMarkdown(nodes: TreeNode[]): string {
 
 export function markdownToTree(
   text: string,
-  existingTree: TreeNode[] = []
+  existingTree: TreeNode[] = [],
+  // config 添加上默认配置是为了方便测试
+  config: EditorConfig = {
+    autoSlash: false,
+  }
 ): { tree: TreeNode[]; error: ParseError | null } {
   try {
-    const parsedNodes = parseMarkdownToNodes(text);
+    const fixedMarkdown = fixMarkdownByConfig(text, config);
+    const { parsedNodes } = parseMarkdownToNodes(fixedMarkdown);
     const updatedTree = updateTreeNode(parsedNodes, existingTree);
     return { tree: updatedTree, error: null };
   } catch (error) {

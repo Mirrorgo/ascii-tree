@@ -1,13 +1,25 @@
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Undo2 } from "lucide-react";
+import { AlertTriangle, Info, Undo2 } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import TextEditor, { TextEditorRef } from "./text-editor";
 import { TextState } from "@/typings";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+
+type EditorConfig = {
+  autoSlash: boolean;
+};
 
 interface MarkdownEditorProps {
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string, config: EditorConfig) => void;
   textState: TextState;
   onUndo: () => void;
 }
@@ -26,16 +38,41 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
       },
     }));
 
+    const [config, setConfig] = useState<EditorConfig>({
+      autoSlash: true,
+    });
+
     const handleJumpToError = (lineNumber: number, column: number) => {
       editorRef.current?.jumpToPosition(lineNumber, column);
     };
 
+    useEffect(() => {
+      onChange(value, config);
+    }, [config.autoSlash]);
+
     return (
-      <div className="flex-1 flex flex-col h-full m-1">
+      <div className="flex-1 flex flex-col h-full m-1 relative">
+        <div className="absolute top-2 right-5 flex items-center space-x-2 z-10 bg-background">
+          <Switch
+            id="auto-slash"
+            checked={config.autoSlash}
+            onCheckedChange={() =>
+              setConfig((prev) => ({ ...prev, autoSlash: !prev.autoSlash }))
+            }
+          />
+          <Label htmlFor="auto-slash">Auto Slash</Label>
+          <div
+            title="Automatically append '/' to nodes that have children"
+            className="cursor-pointer rounded"
+          >
+            <Info size={16} strokeWidth={2} />
+          </div>
+        </div>
+
         <TextEditor
           ref={editorRef}
           initialValue={value}
-          onChange={onChange}
+          onChange={(val) => onChange(val, config)}
           className="w-full flex-1"
         />
         <div className="h-20 overflow-auto mb-1">
@@ -84,3 +121,5 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
 MarkdownEditor.displayName = "MarkdownEditor";
 
 export default MarkdownEditor;
+
+export type { EditorConfig };

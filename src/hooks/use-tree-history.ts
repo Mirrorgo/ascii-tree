@@ -89,14 +89,14 @@ export function useTreeHistory() {
   }, [history, historyIndex, canRedo]);
 
   // Debug history state changes
-  useEffect(() => {
-    console.log({
-      historyLength: history.length,
-      historyIndex,
-      canUndo,
-      canRedo,
-    });
-  }, [history.length, historyIndex, canUndo, canRedo]);
+  // useEffect(() => {
+  //   console.log({
+  //     historyLength: history.length,
+  //     historyIndex,
+  //     canUndo,
+  //     canRedo,
+  //   });
+  // }, [history.length, historyIndex, canUndo, canRedo]);
 
   return {
     fileTree,

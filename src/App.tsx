@@ -42,7 +42,7 @@ import { TextState, TreeNode } from "./typings";
 import ShortcutsDialog from "./components/mg/shortcuts";
 import AsciiTreeParserDialog from "./components/mg/ascii-tree-parser-dialog";
 import AsciiTreePanel from "./components/mg/ascii-tree-panel";
-import MarkdownEditor from "./components/mg/markdown-editor";
+import MarkdownEditor, { EditorConfig } from "./components/mg/markdown-editor";
 import { useTreeHistory } from "./hooks/use-tree-history";
 import { useToast } from "./hooks/use-toast";
 import { markdownToTree, treeToMarkdown } from "./helper/markdown";
@@ -86,14 +86,13 @@ function App() {
     error: null,
   });
 
-  const handleEditorChange = (value: string) => {
+  const handleEditorChange = (value: string, config: EditorConfig) => {
+    const { tree: newTree, error } = markdownToTree(value, fileTree, config); // 传入当前的 fileTree
     setTextState({
       content: value,
       isValid: true,
       error: null,
     });
-
-    const { tree: newTree, error } = markdownToTree(value, fileTree); // 传入当前的 fileTree
     if (error) {
       setTextState((prev) => ({
         ...prev,

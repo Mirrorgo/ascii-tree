@@ -12,7 +12,6 @@ import {
   forwardRef,
   useImperativeHandle,
   useCallback,
-  useEffect,
 } from "react";
 import { Input } from "../ui/input";
 import { TreeNode } from "@/typings";
@@ -47,9 +46,9 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
     );
 
     // 监控 collapsedNodes 的变化
-    useEffect(() => {
-      console.log("collapsedNodes changed:", Array.from(collapsedNodes));
-    }, [collapsedNodes]);
+    // useEffect(() => {
+    //   console.log("collapsedNodes changed:", Array.from(collapsedNodes));
+    // }, [collapsedNodes]);
     const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 
     // Get all folder IDs recursively
@@ -87,13 +86,10 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
       ref,
       () => ({
         expandAll: () => {
-          console.log("expandAll called");
           setCollapsedNodes(new Set());
         },
         collapseAll: () => {
-          console.log("collapseAll called");
           const allFolderIds = getAllFolderIds(props.nodes);
-          console.log("Found folder IDs:", allFolderIds);
           setCollapsedNodes(new Set(allFolderIds));
         },
         expandNode: (nodeId: string) => {
@@ -144,12 +140,6 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
     // Recursive render function
     const renderNode = useCallback(
       (node: TreeNode, level: number = 0) => {
-        console.log(
-          "Rendering node:",
-          node.id,
-          "isCollapsed:",
-          collapsedNodes.has(node.id)
-        );
         const hasChildren = node.children && node.children.length > 0;
         const isSelected = props.selectedNodeIds.includes(node.id);
         const isFolder = node.name.endsWith("/");

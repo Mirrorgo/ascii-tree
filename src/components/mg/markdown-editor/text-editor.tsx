@@ -32,7 +32,7 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
       initialValue = "",
       onChange,
       className = "",
-      placeholder = "Start typing... (Supports Alt+↑↓ to move lines, Tab/Shift+Tab to adjust indent level, - to create lists)",
+      placeholder = "\nStart typing... (Supports Alt+↑↓ to move lines, Tab/Shift+Tab to adjust indent level, - to create lists)",
     },
     ref
   ) => {
@@ -267,6 +267,10 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
     useEffect(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(
+          textareaRef.current.value.length,
+          textareaRef.current.value.length
+        );
       }
     }, []);
 

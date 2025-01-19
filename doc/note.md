@@ -198,22 +198,27 @@ enable comment in file and get gitignore as directoryIgnore
 
 
 推广之前必须做的事情
-- 新建node时手动填入内容，光标移动过去
-- 批量tab和un tab
-- 支持自动添加 /
-- 支持注释
-  - ctrl+/ 切换到注释部分
-- 支持强制解析
-- 没有已知bug
-- 支持中文
-- 版本号1.0
-- contribution之前先发个issue告知一声，看看需不需要，以及是否和我做重了
-  - 对于不希望加的功能，提议自己fork
+- done
+  - 批量tab和un tab
+  - 支持自动添加 /
+- todo
+  - 新建node时手动填入内容，光标移动过去
+  - format逻辑优化，保证光标位置正确
+    - 还是现有format，然后计算光标新位置
+  - 支持注释
+    - ctrl+/ 切换到注释部分
+  - 支持强制解析
+  - 没有已知bug
+  - 支持中文
+  - 版本号1.0
+  - contribution之前先发个issue告知一声，看看需不需要，以及是否和我做重了
+    - 对于不希望加的功能，提议自己fork
 
 推广后feature
 - 手机兼容
 - 新页面，集成tree命令生成工具，辅助ignore case
 - 丰富的节点图标
+- 支持auto format
 - 波浪线划出报错的部分
   - 一个小的弹出窗口来告诉是什么错误
 - 支持quick fix
@@ -226,3 +231,14 @@ enable comment in file and get gitignore as directoryIgnore
 - 节点拖拽排序
 - 从md文档直接读取无序列表，方便网友贡献模板
   - 后续增加从自己的无需列表直接输入，这样一些不方便传上去的也能用了，比如自己公司内网的
+
+
+
+# 坑与bug
+
+```js
+ // 更新选区偏移量
+if (i === startLineIndex) selectionStartOffset -= 2;
+if (i === endLineIndex)
+  selectionEndOffset -= 2 * (endLineIndex - startLineIndex + 1);
+```
