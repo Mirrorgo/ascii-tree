@@ -82,7 +82,14 @@ describe("Markdown Tree Parser", () => {
         const result = markdownToTree(markdown);
 
         expect(result.tree).toEqual([]);
-        expect(result.error).toBeNull();
+        expect(result.error).toMatchObject({
+          content: "Empty line",
+          location: {
+            column: 1,
+            line: 1,
+          },
+          type: "Empty Line",
+        });
       });
 
       it("should detect invalid indentation", () => {
