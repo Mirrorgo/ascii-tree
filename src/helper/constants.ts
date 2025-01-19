@@ -1,12 +1,12 @@
 import { TreeNode } from "@/typings";
 
 const BASIC_ASCII_TREE_TEMPLATE = `root/
-├── folder1/
-│   ├── file1
-│   └── file2
+└── folder1/
+    ├── file1
+    └── file2
+root2/
 └── folder2/
-    ├── file3
-    └── file4`;
+    └── file3`;
 
 const VITE_REACT_TEMPLATE = `vite-react/
 ├── public/
@@ -276,20 +276,22 @@ const INITIAL_TREE: TreeNode[] = [
           },
         ],
       },
+    ],
+  },
+  {
+    id: "root2",
+    name: "root2/",
+    path: "root2/",
+    children: [
       {
         id: "4",
         name: "folder2/",
-        path: "root/folder2/",
+        path: "root2/folder2/",
         children: [
           {
             id: "5",
             name: "file3",
-            path: "root/folder2/file3",
-          },
-          {
-            id: "6",
-            name: "file4",
-            path: "root/folder2/file6",
+            path: "root2/folder2/file3",
           },
         ],
       },

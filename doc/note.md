@@ -202,12 +202,13 @@ enable comment in file and get gitignore as directoryIgnore
   - 批量tab和un tab
   - 支持自动添加 /
 - todo
-  - 新建node时手动填入内容，光标移动过去
+  - 新建node时逻辑优化
+    - 手动填入内容，光标移动过去
   - format逻辑优化，保证光标位置正确
     - 还是现有format，然后计算光标新位置
   - 支持注释
     - ctrl+/ 切换到注释部分
-  - 支持强制解析
+  - 支持强制解析ascii tree
   - 没有已知bug
   - 支持中文
   - 版本号1.0
