@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { TreeNode } from "@/typings";
-import { markdownToTree, treeToMarkdown } from "./markdown";
+import { markdownToTree, treeToMarkdown } from "./markdown.ts";
 
 describe("Markdown Tree Parser", () => {
   describe("markdownToTree", () => {
@@ -74,6 +74,120 @@ describe("Markdown Tree Parser", () => {
           children: [],
         },
       ]);
+    });
+
+    describe("Comment Handling", () => {
+      it("should parse comments in file and folder nodes", () => {
+        const markdown = `- Root/ # root folder
+  - Child/ # child folder
+    - file1.js # file1 comment
+- index.js # top-level file
+    `;
+
+        const result = markdownToTree(markdown);
+
+        expect(result.error).toBeNull(); // 确保解析没报错
+        expect(result.tree).toMatchObject([
+          {
+            name: "Root/",
+            comment: "root folder",
+            children: [
+              {
+                name: "Child/",
+                comment: "child folder",
+                children: [
+                  {
+                    name: "file1.js",
+                    comment: "file1 comment",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            name: "index.js",
+            comment: "top-level file",
+          },
+        ]);
+      });
+
+      it("should parse a nested structure with comments gracefully", () => {
+        const markdown = `- src/ # the root folder for source code
+  - components/ # UI components
+    - button.tsx # reusable button component
+    - modal.tsx # modal dialog component
+  - utils/ # utility functions
+    - helper.ts # helper function
+- package.json # project configuration
+- .gitignore # file for ignored content`;
+
+        const result = markdownToTree(markdown);
+
+        // 确保解析没有出错
+        expect(result.error).toBeNull();
+
+        // 验证解析后的节点树结构
+        expect(result.tree).toMatchObject([
+          {
+            name: "src/",
+            comment: "the root folder for source code",
+            children: [
+              {
+                name: "components/",
+                comment: "UI components",
+                children: [
+                  {
+                    name: "button.tsx",
+                    comment: "reusable button component",
+                  },
+                  {
+                    name: "modal.tsx",
+                    comment: "modal dialog component",
+                  },
+                ],
+              },
+              {
+                name: "utils/",
+                comment: "utility functions",
+                children: [
+                  {
+                    name: "helper.ts",
+                    comment: "helper function",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            name: "package.json",
+            comment: "project configuration",
+          },
+          {
+            name: ".gitignore",
+            comment: "file for ignored content",
+          },
+        ]);
+      });
+
+      it("should handle nodes without comment correctly", () => {
+        const markdown = `- folder/
+      - file.txt`;
+
+        const result = markdownToTree(markdown);
+
+        expect(result.error).toBeNull();
+        expect(result.tree).toMatchObject([
+          {
+            name: "folder/",
+            // 没有comment字段
+            children: [
+              {
+                name: "file.txt",
+              },
+            ],
+          },
+        ]);
+      });
     });
 
     describe("Error Handling", () => {

@@ -2,9 +2,15 @@ import { ParsedNode, ParseError, TreeNode } from "@/typings";
 import { generateId, generateNodePath } from "./global";
 import { EditorConfig } from "@/components/mg/markdown-editor";
 
-type ValidationResult = {
+/**
+ * @property level - The indentation level of the node.
+ * @property name - The name of the file or folder.
+ * @property comment - An optional comment for the node.
+ */
+type MdParseResult = {
   level: number;
   name: string;
+  comment?: string;
 };
 
 const isFolder = (nodeName: string) => nodeName.endsWith("/");
@@ -26,16 +32,16 @@ const parseMarkdownToNodes = (text: string): { parsedNodes: ParsedNode[] } => {
 
   lines.forEach((line, lineIndex) => {
     const nextLine = lines[lineIndex + 1];
-    let validationResult: ValidationResult;
+    let markdownParseResult: MdParseResult;
 
     try {
       // 仅解析行以获取级别和名称，不进行重复检测
-      validationResult = parseMarkdownLine(line, lineIndex, nextLine);
+      markdownParseResult = parseMarkdownLine(line, lineIndex, nextLine);
     } catch (error) {
       throw error;
     }
 
-    const { level, name } = validationResult;
+    const { level, name, comment } = markdownParseResult;
 
     // 调整堆栈以找到正确的父节点
     while (stack.length > 0 && stack[stack.length - 1].level >= level) {
@@ -66,6 +72,7 @@ const parseMarkdownToNodes = (text: string): { parsedNodes: ParsedNode[] } => {
       name,
       path: generateNodePath(parent.path, name),
       children: isFolder(name) ? [] : undefined,
+      comment,
     };
 
     // 添加新节点到父节点的 children
@@ -90,7 +97,7 @@ function parseMarkdownLine(
   line: string,
   lineIndex: number,
   nextLine: string | undefined
-): ValidationResult {
+): MdParseResult {
   // 检查空行
   const firstNonSpace = line.search(/\S/);
   if (firstNonSpace === -1) {
@@ -105,7 +112,8 @@ function parseMarkdownLine(
   }
 
   // 使用正则匹配行格式，捕获缩进和内容
-  const match = line.match(/^(\s*)-(\s+.+)$/);
+  // const match = line.match(/^(\s*)-(\s+.+)$/);
+  const match = line.match(/^(\s*)-\s+([^#]+)(?:\s*#\s*(.*))?$/);
 
   if (!match) {
     const dashIndex = line.indexOf("-");
@@ -153,7 +161,7 @@ function parseMarkdownLine(
     }
   }
 
-  const [, indent, content] = match;
+  const [, indent, content, commentPart] = match;
 
   // 检查缩进是否为 2 的倍数
   if (indent.length % 2 !== 0) {
@@ -168,6 +176,7 @@ function parseMarkdownLine(
   }
 
   let nodeName = content.trim();
+  const comment = commentPart ? commentPart.trim() : undefined;
 
   // 检查节点名称是否为空
   if (!nodeName) {
@@ -203,6 +212,7 @@ function parseMarkdownLine(
   return {
     level: indent.length / 2,
     name: nodeName,
+    comment,
   };
 }
 
@@ -220,6 +230,7 @@ const updateTreeNode = (
         ...existingNode,
         name: parsedNode.name,
         path: parsedNode.path,
+        comment: parsedNode.comment,
         children:
           parsedNode.children !== undefined
             ? parsedNode.children.length > 0
@@ -233,6 +244,7 @@ const updateTreeNode = (
         id: generateId(),
         name: parsedNode.name,
         path: parsedNode.path,
+        comment: parsedNode.comment,
         children:
           parsedNode.children !== undefined
             ? parsedNode.children.length > 0
@@ -244,7 +256,7 @@ const updateTreeNode = (
   });
 };
 
-const fixMarkdownByConfig = (text: string, config: EditorConfig) => {
+const preprocess = (text: string, config: EditorConfig) => {
   const lines = text.split("\n");
   const newLines: string[] = [];
 
@@ -266,16 +278,20 @@ const fixMarkdownByConfig = (text: string, config: EditorConfig) => {
     | { isFixed: true; fixedLine: string }
     | { isFixed: false; fixedLine: null };
   function autoSlash(line: string, nextLine: string): AutoSlashResult {
-    const match = line.match(/^(\s*)-(\s+.+)$/);
+    const match = line.match(/^(\s*)-\s+([^#]+)(?:\s*#\s*(.*))?$/);
+    // const match = line.match(/^(\s*)-(\s+.+)$/);
     const nextLineMatch = nextLine.match(/^(\s*)(?:[├└]──\s+|\-\s+)(.+)$/);
     if (!match || !nextLineMatch) return { isFixed: false, fixedLine: null }; // 交给validator去处理吧
     const [, indent, content] = match;
-    let nodeName = content.trim();
+    const nodeName = content.trim();
     if (isFolder(nodeName)) return { isFixed: false, fixedLine: null }; // 不用改了
     const currentLevel = indent.length / 2;
     const nextLineIndent = nextLineMatch ? nextLineMatch[1].length / 2 : 0;
     if (nextLineIndent > currentLevel) {
-      const fixedLine = line + "/";
+      const lastIndexOfNodeName = indent.length + 2 + nodeName.length;
+      let temp = line.split("");
+      temp.splice(lastIndexOfNodeName, 0, "/");
+      const fixedLine = temp.join("");
       return { isFixed: true, fixedLine };
     } else {
       return { isFixed: false, fixedLine: null };
@@ -289,7 +305,9 @@ export function treeToMarkdown(nodes: TreeNode[]): string {
 
   function singleNodeToMarkdown(node: TreeNode, level = 0): string {
     const indent = "  ".repeat(level);
-    let result = `${indent}- ${node.name}\n`;
+    const commentPart = node.comment ? ` # ${node.comment}` : "";
+    let result = `${indent}- ${node.name}${commentPart}\n`;
+    // let result = `${indent}- ${node.name}\n`;
 
     if (node.children && node.children.length > 0) {
       result += node.children
@@ -310,8 +328,8 @@ export function markdownToTree(
   }
 ): { tree: TreeNode[]; error: ParseError | null } {
   try {
-    const fixedMarkdown = fixMarkdownByConfig(text, config);
-    const { parsedNodes } = parseMarkdownToNodes(fixedMarkdown);
+    const processedText = preprocess(text, config);
+    const { parsedNodes } = parseMarkdownToNodes(processedText);
     const updatedTree = updateTreeNode(parsedNodes, existingTree);
     return { tree: updatedTree, error: null };
   } catch (error) {

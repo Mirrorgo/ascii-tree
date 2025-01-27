@@ -1,12 +1,3 @@
-// type MarkdownParseError = {
-//   content: string;
-//   type: string;
-//   location: {
-//     line: number;
-//     column: number;
-//   };
-// };
-
 interface ParseError {
   content: string;
   type: string;
@@ -20,7 +11,19 @@ interface TreeNode {
   id: string;
   name: string;
   path: string;
+  comment?: string;
   children?: TreeNode[];
+}
+
+/**
+ * Represents a tree node structure used during parsing,
+ * which is similar to `TreeNode` but does not include the `id` field.
+ */
+interface ParsedNode {
+  name: string;
+  path: string;
+  comment?: string;
+  children?: ParsedNode[];
 }
 
 interface TextState {
@@ -38,13 +41,6 @@ interface TreeState {
 interface HistoryEntry {
   tree: TreeState;
   text: TextState;
-}
-
-// 为了解析过程中的节点匹配使用
-interface ParsedNode {
-  name: string;
-  path: string;
-  children?: ParsedNode[];
 }
 
 export type {

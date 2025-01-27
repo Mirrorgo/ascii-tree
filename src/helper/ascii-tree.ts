@@ -16,7 +16,10 @@ const generateAsciiFromSingleNode = (
 ): string => {
   let result = "";
 
-  const displayName = node.name;
+  // 若存在 comment，则在节点名称后加上 "# 注释"
+  const displayName = node.comment
+    ? `${node.name}  # ${node.comment}`
+    : node.name;
 
   if (isRoot) {
     result = displayName + "\n";
@@ -52,14 +55,21 @@ function parseAsciiTree(asciiText: string): TreeNode[] {
   const stack: { node: TreeNode; level: number }[] = [];
 
   lines.forEach((line) => {
-    // 修正后的正则表达式：
-    // 使用 '─'（U+2500）代替 '-', 确保匹配 '├── ' 和 '└── '
     const regex = /^((?:│   |    )*)(?:[├└]─{2,}\s+)(.*)$/;
     const match = line.match(regex);
 
     if (match) {
       const indentBlocks = match[1];
-      const name = match[2].trim();
+      const content = match[2].trim();
+      const sharpIndex = content.indexOf("#");
+      let name = "";
+      let comment: string | undefined;
+      if (sharpIndex !== -1) {
+        name = content.slice(0, sharpIndex).trim();
+        comment = content.slice(sharpIndex + 1).trim();
+      } else {
+        name = content;
+      }
 
       // 计算缩进块的数量，每个 "│   " 或 "    " 块代表一级缩进
       const indentBlockPattern = /(?:│   |    )/g;
@@ -75,6 +85,7 @@ function parseAsciiTree(asciiText: string): TreeNode[] {
         id: generateId(),
         name: name,
         path: "",
+        comment,
         // children 仅在有子节点时添加
       };
 

@@ -45,7 +45,7 @@ import AsciiTreePanel from "./components/mg/ascii-tree-panel";
 import MarkdownEditor, { EditorConfig } from "./components/mg/markdown-editor";
 import { useTreeHistory } from "./hooks/use-tree-history";
 import { useToast } from "./hooks/use-toast";
-import { markdownToTree, treeToMarkdown } from "./helper/markdown";
+import { markdownToTree, treeToMarkdown } from "./helper/markdown.ts";
 
 function App() {
   const { toast } = useToast();
@@ -356,6 +356,7 @@ function App() {
   }
 
   const handleAddFile = (fileName: string = "New File") => {
+    console.log(selectedNodeIds, "111");
     if (selectedNodeIds.length > 1) return;
     let newTree: TreeNode[];
     if (selectedNodeIds.length === 0) {

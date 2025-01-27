@@ -21,6 +21,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { TooltipArrow } from "@radix-ui/react-tooltip";
 
 export interface TreeNodeRef {
   expandAll: () => void;
@@ -207,30 +208,42 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
               )}
               {isEditing ? (
                 <Input
-                  className="h-6 mx-0"
+                  className="h-6 mx-0 flex-1"
                   autoFocus
                   onClick={(e) => e.stopPropagation()}
                   onBlur={saveEdit}
                   defaultValue={node.name}
                 />
               ) : (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="truncate flex-1">
-                        {removeTrailingSlash(node.name)}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {removeTrailingSlash(node.name)}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="truncate space-x-2 flex-1">
+                          <span>{`${removeTrailingSlash(node.name)}`}</span>
+                          <span className="text-gray-400">{node.comment}</span>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span className="space-x-2">
+                          <span>{removeTrailingSlash(node.name)}</span>
+                          {node.comment !== undefined &&
+                            node.comment !== "" && (
+                              <span className="text-green-500">
+                                {node.comment}
+                              </span>
+                            )}
+                        </span>
+                        <TooltipArrow />
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <SquarePen
+                    onClick={handleEdit}
+                    className="w-4 h-4 ml-auto text-gray-500 hover:text-blue-500"
+                  />
+                </>
               )}
-              <SquarePen
-                onClick={handleEdit}
-                className="w-4 h-4 ml-auto text-gray-500 hover:text-blue-500"
-              />
             </div>
 
             {hasChildren && !isCollapsed && (

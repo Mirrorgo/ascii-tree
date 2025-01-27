@@ -113,84 +113,6 @@ TODO
 - 抽离出复用的validator,目前每个部分validator都是分离的
 - slash之前不能有空格
 
-```
-company-project/              
-  ├── main-egg-project/      
-  │   ├── .git/             
-  │   ├── package.json      
-  │   └── app/
-  │       └── public/
-  │           └── antd-pro/ 
-  │
-  └── antd-project/         
-      ├── .git/              
-      ├── package.json     
-      └── src/
-```
-
-```
-.gitignore
-README.md
-components.json
-doc/
-└── note.md
-eslint.config.js
-index.html
-package.json
-pnpm-lock.yaml
-postcss.config.js
-public/
-└── vite.svg
-src/
-├── App.tsx
-└── assets/
-    └── react.svg
-└── components/
-    └── mg/
-        ├── ascii-tree-panel.tsx
-        ├── ascii-tree-parser-dialog.tsx
-        └── markdown-editor/
-            ├── index.tsx
-            └── text-editor.tsx
-        ├── shortcuts.tsx
-        └── tree-node.tsx
-    └── ui/
-        ├── accordion.tsx
-        ├── alert.tsx
-        ├── button.tsx
-        ├── dialog.tsx
-        ├── dropdown-menu.tsx
-        ├── input.tsx
-        ├── menubar.tsx
-        ├── resizable.tsx
-        ├── select.tsx
-        ├── textarea.tsx
-        ├── toast.tsx
-        └── toaster.tsx
-└── helper/
-    ├── ascii-tree.ts
-    ├── constants.ts
-    ├── explorer.ts
-    └── global.ts
-└── hooks/
-    ├── use-responsive-panel.ts
-    ├── use-toast.ts
-    └── use-tree-history.ts
-├── index.css
-└── lib/
-    └── utils.ts
-├── main.tsx
-└── typings/
-    └── index.ts
-└── vite-env.d.ts
-tailwind.config.js
-tsconfig.app.json
-tsconfig.json
-tsconfig.node.json
-vite.config.ts
-```
-
-
 可以用 https://tree.uncenter.dev/ 配合， 是否还要自己实现这个project的功能？
 
 enable comment in file and get gitignore as directoryIgnore
@@ -201,13 +123,13 @@ enable comment in file and get gitignore as directoryIgnore
 - done
   - 批量tab和un tab
   - 支持自动添加 /
+  - 支持注释
 - todo
   - 新建node时逻辑优化
     - 手动填入内容，光标移动过去
+    - validate node
   - format逻辑优化，保证光标位置正确
     - 还是现有format，然后计算光标新位置
-  - 支持注释
-    - ctrl+/ 切换到注释部分
   - 支持强制解析ascii tree
   - 没有已知bug
   - 支持中文
@@ -216,9 +138,15 @@ enable comment in file and get gitignore as directoryIgnore
     - 对于不希望加的功能，提议自己fork
 
 推广后feature
+- ctrl+/ 切换到注释部分
+- 行号
+  - wrap时的行号
+- auto slash的那个东西悬浮窗口希望完成文字环绕效果
 - 手机兼容
+- ascii view仅copy当前子树，悬浮的时候显示出当前子树的这个框框
 - 新页面，集成tree命令生成工具，辅助ignore case
 - 丰富的节点图标
+- 生成截图
 - 支持auto format
 - 波浪线划出报错的部分
   - 一个小的弹出窗口来告诉是什么错误
@@ -232,10 +160,26 @@ enable comment in file and get gitignore as directoryIgnore
 - 节点拖拽排序
 - 从md文档直接读取无序列表，方便网友贡献模板
   - 后续增加从自己的无需列表直接输入，这样一些不方便传上去的也能用了，比如自己公司内网的
+- profiler性能优化
 
+# 当前剩余bug
+顶级节点有时无法正常add
+```
+.gitignore
+README.md
+tailwind.config.js
+tsconfig.app.json
+tsconfig.json
+tsconfig.node.json
+vite.config.ts
+```
 
+# 当前可优化
+统一对文本处理的正则：两种
+- ascii
+- md
 
-# 坑与bug
+# 坑与bug的解决
 
 ```js
  // 更新选区偏移量
