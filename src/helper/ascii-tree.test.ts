@@ -390,4 +390,107 @@ Root2/
       ).toBe(true);
     });
   });
+  describe("Comment Handling", () => {
+    it("should parse comments correctly", () => {
+      const asciiTree = `root/
+├── file1  # this is a file
+└── folder/  # this is a folder`;
+
+      const parsed = parseAsciiTree(asciiTree)[0];
+
+      expect(parsed.name).toBe("root/");
+      expect(parsed.children?.[0].name).toBe("file1");
+      expect(parsed.children?.[0].comment).toBe("this is a file");
+      expect(parsed.children?.[1].name).toBe("folder/");
+      expect(parsed.children?.[1].comment).toBe("this is a folder");
+    });
+
+    it("should preserve comments when generating ASCII tree", () => {
+      const tree: TreeNode[] = [
+        {
+          id: "1",
+          name: "root/",
+          path: "root/",
+          children: [
+            {
+              id: "2",
+              name: "file1",
+              path: "root/file1",
+              comment: "this is a file",
+              children: [],
+            },
+            {
+              id: "3",
+              name: "folder/",
+              path: "root/folder/",
+              comment: "this is a folder",
+              children: [],
+            },
+          ],
+        },
+      ];
+
+      const expectedAscii = `root/
+├── file1  # this is a file
+└── folder/  # this is a folder`;
+
+      expect(generateAscii(tree).trim()).toBe(expectedAscii);
+    });
+
+    it("should handle nodes with missing comments", () => {
+      const asciiTree = `root/
+├── file1  # file comment
+├── file2
+└── folder/`;
+
+      const parsed = parseAsciiTree(asciiTree)[0];
+
+      expect(parsed.children?.[0].comment).toBe("file comment");
+      expect(parsed.children?.[1].comment).toBeUndefined();
+      expect(parsed.children?.[2].comment).toBeUndefined();
+    });
+
+    it("should parse deeply nested nodes with comments", () => {
+      const asciiTree = `root/
+└── folder/
+    ├── file1  # comment1
+    └── subfolder/  # comment2
+        └── file2  # comment3`;
+
+      const parsed = parseAsciiTree(asciiTree)[0];
+
+      expect(parsed.children?.[0].name).toBe("folder/");
+      expect(parsed.children?.[0].children?.[0].comment).toBe("comment1");
+      expect(parsed.children?.[0].children?.[1].comment).toBe("comment2");
+      expect(parsed.children?.[0].children?.[1].children?.[0].comment).toBe(
+        "comment3"
+      );
+    });
+
+    it("should ignore # inside node names and not treat it as a comment", () => {
+      const asciiTree = `root/
+├── file#1
+└── folder/#subfolder`;
+
+      const parsed = parseAsciiTree(asciiTree)[0];
+
+      expect(parsed.children?.[0].name).toBe("file");
+      expect(parsed.children?.[0].comment).toBe("1");
+
+      expect(parsed.children?.[1].name).toBe("folder/");
+      expect(parsed.children?.[1].comment).toBe("subfolder");
+    });
+
+    it("should validate ASCII tree with malformed comments", () => {
+      const invalidTree = `root/
+└── file1#missing space after #`;
+
+      const result = isValidAsciiTree(invalidTree);
+      expect(result.valid).toBe(true); // 允许注释缺少空格，但不解析为 comment
+      const parsed = parseAsciiTree(invalidTree)[0];
+
+      expect(parsed.children?.[0].name).toBe("file1");
+      expect(parsed.children?.[0].comment).toBe("missing space after #");
+    });
+  });
 });
