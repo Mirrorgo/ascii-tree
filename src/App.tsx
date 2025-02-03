@@ -18,7 +18,6 @@ import {
   isValidAsciiTree,
   parseAsciiTree,
 } from "./helper/ascii-tree";
-import TreeNodeComponent, { TreeNodeRef } from "./components/mg/tree-node";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -46,6 +45,10 @@ import MarkdownEditor, { EditorConfig } from "./components/mg/markdown-editor";
 import { useTreeHistory } from "./hooks/use-tree-history";
 import { useToast } from "./hooks/use-toast";
 import { markdownToTree, treeToMarkdown } from "./helper/markdown.ts";
+import ExplorerPanel, {
+  ExplorerPanelRef,
+} from "./components/mg/explorer-panel";
+import { removeNodes } from "./helper/global.ts";
 
 function App() {
   const { toast } = useToast();
@@ -127,22 +130,6 @@ function App() {
 
   const deleteNode = () => {
     if (selectedNodeIds.length === 0) return;
-    const removeNodes = (
-      nodes: TreeNode[],
-      selectedIds: string[]
-    ): TreeNode[] => {
-      return nodes
-        .filter((node) => !selectedIds.includes(node.id))
-        .map((node) => {
-          if (node.children) {
-            return {
-              ...node,
-              children: removeNodes(node.children, selectedIds),
-            };
-          }
-          return node;
-        });
-    };
     const newTree = removeNodes(fileTree, selectedNodeIds);
 
     setFileTree(newTree);
@@ -160,34 +147,6 @@ function App() {
       { content: newText, isValid: true, error: null }
     );
     return;
-  };
-
-  const updateNode = (nodeId: string, newName: string) => {
-    const updateTreeNode = (nodes: TreeNode[]): TreeNode[] =>
-      nodes.map((node) => {
-        if (node.id === nodeId) {
-          return { ...node, name: newName }; // 更新当前节点
-        }
-        if (node.children) {
-          return { ...node, children: updateTreeNode(node.children) }; // 递归更新子节点
-        }
-        return node; // 返回未改变的节点
-      });
-
-    const newTree = updateTreeNode(fileTree);
-    setFileTree(newTree);
-
-    const newText = treeToMarkdown(newTree);
-    setTextState({
-      content: newText,
-      isValid: true,
-      error: null,
-    });
-
-    addToHistory(
-      { tree: newTree, selectedNodeIds, lastSelectedId },
-      { content: newText, isValid: true, error: null }
-    );
   };
 
   const handleNodeSelection = (
@@ -356,11 +315,12 @@ function App() {
   }
 
   const handleAddFile = (fileName: string = "New File") => {
-    console.log(selectedNodeIds, "111");
     if (selectedNodeIds.length > 1) return;
+    let newNode: TreeNode;
     let newTree: TreeNode[];
     if (selectedNodeIds.length === 0) {
-      newTree = [...fileTree, createNode(fileName, false)];
+      newNode = createNode(fileName, false);
+      newTree = [...fileTree, newNode];
     } else {
       let parentPath = "";
       const selectedNodeId = selectedNodeIds[0];
@@ -370,31 +330,22 @@ function App() {
           ? selectedNode.path
           : getParentPath(selectedNode.path);
       }
-      const newNode = createNode(fileName, false, parentPath);
-      treeRef.current?.expandNode(selectedNodeId);
+      newNode = createNode(fileName, false, parentPath);
+      explorerPanelRef.current?.expandNode(selectedNodeId);
       newTree = processNode(fileTree, selectedNodeId, newNode);
     }
-    // 更新状态
     setFileTree(newTree);
-    const newText = treeToMarkdown(newTree);
-    setTextState({
-      content: newText,
-      isValid: true,
-      error: null,
-    });
-
-    addToHistory(
-      { tree: newTree, selectedNodeIds, lastSelectedId },
-      { content: newText, isValid: true, error: null }
-    );
+    setEditingNodeId(newNode.id);
     return;
   };
 
   const handleAddFolder = (folderName: string = "New Folder/") => {
     if (selectedNodeIds.length > 1) return;
+    let newNode: TreeNode;
     let newTree: TreeNode[];
     if (selectedNodeIds.length === 0) {
-      newTree = [...fileTree, createNode(folderName, true)];
+      newNode = createNode(folderName, true);
+      newTree = [...fileTree, newNode];
     } else {
       let parentPath = "";
       const selectedNodeId = selectedNodeIds[0];
@@ -404,12 +355,29 @@ function App() {
           ? selectedNode.path
           : getParentPath(selectedNode.path);
       }
-      const newNode = createNode(folderName, false, parentPath);
-      treeRef.current?.expandNode(selectedNodeId);
+      newNode = createNode(folderName, false, parentPath);
+      explorerPanelRef.current?.expandNode(selectedNodeId);
       newTree = processNode(fileTree, selectedNodeId, newNode);
     }
-    // 更新状态
     setFileTree(newTree);
+    setEditingNodeId(newNode.id);
+    return;
+  };
+
+  const onUpdateNode = (nodeId: string, updates: Partial<TreeNode>) => {
+    const updateTreeNode = (nodes: TreeNode[]): TreeNode[] =>
+      nodes.map((node) => {
+        if (node.id === nodeId) {
+          return { ...node, ...updates }; // 更新当前节点
+        }
+        if (node.children) {
+          return { ...node, children: updateTreeNode(node.children) }; // 递归更新子节点
+        }
+        return node; // 返回未改变的节点
+      });
+    const newTree = updateTreeNode(fileTree);
+    setFileTree(newTree);
+
     const newText = treeToMarkdown(newTree);
     setTextState({
       content: newText,
@@ -421,10 +389,14 @@ function App() {
       { tree: newTree, selectedNodeIds, lastSelectedId },
       { content: newText, isValid: true, error: null }
     );
-    return;
   };
 
-  const treeRef = useRef<TreeNodeRef>(null);
+  const explorerPanelRef = useRef<ExplorerPanelRef>(null);
+
+  const onRemoveTempNode = useCallback((nodeId: string) => {
+    setFileTree((prev) => removeNodes(prev, [nodeId]));
+    setEditingNodeId(null);
+  }, []);
 
   const handleShare = () => {
     const url = new URL(window.location.href);
@@ -435,6 +407,8 @@ function App() {
       duration: 1000,
     });
   };
+
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 
   return (
     <div className="h-screen flex flex-col">
@@ -574,7 +548,7 @@ function App() {
                       size="icon"
                       className="w-8 h-8" // icon 本来是9，调小一点
                       disabled={isTreeLocked}
-                      onClick={() => treeRef.current?.collapseAll()}
+                      onClick={() => explorerPanelRef.current?.collapseAll()}
                     >
                       <ChevronsDownUp />
                     </Button>
@@ -589,14 +563,17 @@ function App() {
                     </Button>
                   </div>
                   <div className="flex-1 overflow-auto min-h-0">
-                    <TreeNodeComponent
-                      ref={treeRef}
+                    <ExplorerPanel
+                      onRemoveTempNode={onRemoveTempNode}
+                      editingNodeId={editingNodeId}
+                      setEditingNodeId={setEditingNodeId}
+                      ref={explorerPanelRef}
                       nodes={fileTree}
-                      onUpdate={updateNode}
                       selectedNodeIds={selectedNodeIds}
                       onSelectNode={(id, ctrlKey, shiftKey) =>
                         handleNodeSelection(id, ctrlKey, shiftKey)
                       }
+                      onUpdateNode={onUpdateNode}
                       disabled={isTreeLocked}
                     />
                   </div>

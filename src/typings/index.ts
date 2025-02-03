@@ -11,6 +11,7 @@ interface TreeNode {
   id: string;
   name: string;
   path: string;
+  isTemp?: boolean;
   comment?: string;
   children?: TreeNode[];
 }

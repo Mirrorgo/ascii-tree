@@ -1,60 +1,42 @@
-import {
-  ChevronDown,
-  ChevronRight,
-  FileText,
-  Folder,
-  SquarePen,
-} from "lucide-react";
-import {
-  FocusEvent,
-  MouseEventHandler,
-  useState,
-  forwardRef,
-  useImperativeHandle,
-  useCallback,
-} from "react";
-import { Input } from "../ui/input";
+import { ChevronDown, ChevronRight, FileText, Folder } from "lucide-react";
+import { useState, forwardRef, useImperativeHandle, useCallback } from "react";
 import { TreeNode } from "@/typings";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "../ui/tooltip";
+} from "../../ui/tooltip";
 import { TooltipArrow } from "@radix-ui/react-tooltip";
+import { NodeEditPopover } from "./node-edit-popover";
+import { removeTrailingSlash } from "@/helper/global";
 
-export interface TreeNodeRef {
+export interface ExplorerPanelRef {
   expandAll: () => void;
   collapseAll: () => void;
   expandNode: (nodeId: string) => void;
   collapseNode: (nodeId: string) => void;
 }
 
-interface TreeNodeProps {
+interface ExplorerPanelProps {
   nodes: TreeNode[];
   level?: number;
-  onUpdate: (id: string, newName: string) => void;
   selectedNodeIds: string[];
+  editingNodeId: string | null;
+  setEditingNodeId: (id: string | null) => void;
   onSelectNode: (id: string, ctrlKey: boolean, shiftKey: boolean) => void;
   disabled?: boolean;
+  onRemoveTempNode: (id: string) => void;
+  onUpdateNode: (id: string, updates: Partial<TreeNode>) => void;
 }
 
-// Root component that manages all state
-const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
+const ExplorerPanel = forwardRef<ExplorerPanelRef, ExplorerPanelProps>(
   (props, ref) => {
     const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(
       new Set()
     );
 
-    // 监控 collapsedNodes 的变化
-    // useEffect(() => {
-    //   console.log("collapsedNodes changed:", Array.from(collapsedNodes));
-    // }, [collapsedNodes]);
-    const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
-
-    // Get all folder IDs recursively
     const getAllFolderIds = useCallback((nodes: TreeNode[]): string[] => {
-      // console.log("getAllFolderIds called with node:", node);
       return nodes.reduce((folderIds: string[], node) => {
         if (node.name.endsWith("/")) {
           folderIds.push(node.id);
@@ -66,7 +48,6 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
       }, []);
     }, []);
 
-    // Find parent node
     const findParentNode = useCallback(
       (root: TreeNode, nodeId: string): TreeNode | null => {
         if (!root.children) return null;
@@ -138,14 +119,12 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
       [props.nodes, getAllFolderIds, findParentNode]
     );
 
-    // Recursive render function
     const renderNode = useCallback(
       (node: TreeNode, level: number = 0) => {
         const hasChildren = node.children && node.children.length > 0;
         const isSelected = props.selectedNodeIds.includes(node.id);
         const isFolder = node.name.endsWith("/");
         const isCollapsed = collapsedNodes.has(node.id);
-        const isEditing = editingNodeId === node.id;
 
         const handleNodeClick = (e: React.MouseEvent) => {
           if (props.disabled) return;
@@ -163,20 +142,22 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
             });
           }
         };
-
-        const handleEdit: MouseEventHandler<SVGSVGElement> = (e) => {
-          if (props.disabled) return;
-          e.stopPropagation();
-          setEditingNodeId(isEditing ? null : node.id);
-        };
-
-        const saveEdit = (e: FocusEvent<HTMLInputElement>) => {
-          let value = e.target.value;
-          if (!isFolder && hasChildren) {
-            value = value + "/";
+        const displayName = removeTrailingSlash(node.name);
+        const handleOpenChange = (
+          nextOpen: boolean,
+          action?: "cancel" | "save"
+        ) => {
+          if (!nextOpen) {
+            // 正在关闭 Popover
+            if (action === "cancel" && node.isTemp) {
+              // 调用父组件 removeNode 或 handleCancelTempNode
+              props.onRemoveTempNode(node.id);
+            }
+            props.setEditingNodeId(null);
+          } else {
+            // 打开 Popover
+            props.setEditingNodeId(node.id);
           }
-          props.onUpdate(node.id, value);
-          setEditingNodeId(null);
         };
 
         return (
@@ -206,44 +187,46 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
                   <FileText className="w-4 h-4 mr-2 text-gray-500" />
                 </>
               )}
-              {isEditing ? (
-                <Input
-                  className="h-6 mx-0 flex-1"
-                  autoFocus
-                  onClick={(e) => e.stopPropagation()}
-                  onBlur={saveEdit}
-                  defaultValue={node.name}
-                />
-              ) : (
-                <>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="truncate space-x-2 flex-1">
-                          <span>{`${removeTrailingSlash(node.name)}`}</span>
-                          <span className="text-gray-400">{node.comment}</span>
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <span className="space-x-2">
-                          <span>{removeTrailingSlash(node.name)}</span>
-                          {node.comment !== undefined &&
-                            node.comment !== "" && (
-                              <span className="text-green-500">
-                                {node.comment}
-                              </span>
-                            )}
-                        </span>
-                        <TooltipArrow />
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <SquarePen
-                    onClick={handleEdit}
-                    className="w-4 h-4 ml-auto text-gray-500 hover:text-blue-500"
-                  />
-                </>
-              )}
+              {/* 名称 + comment 的展示，可配合 Tooltip */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="truncate space-x-2 flex-1">
+                      <span>{displayName}</span>
+                      {node.comment && (
+                        <span className="text-gray-400">{node.comment}</span>
+                      )}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span className="space-x-2">
+                      <span>{displayName}</span>
+                      {node.comment !== undefined && node.comment !== "" && (
+                        <span className="text-green-500">{node.comment}</span>
+                      )}
+                    </span>
+                    <TooltipArrow />
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {/* 替换成 Popover 方式编辑 */}
+              <NodeEditPopover
+                open={props.editingNodeId === node.id}
+                setOpen={handleOpenChange}
+                defaultName={displayName}
+                defaultIsFolder={isFolder}
+                defaultComment={node.comment ?? ""}
+                onConfirm={({ name, comment }) => {
+                  // 1. 如果是临时节点, 需要去掉 isTemp
+                  // 2. 更新节点信息
+                  props.onUpdateNode(node.id, {
+                    name,
+                    comment,
+                    isTemp: false,
+                  });
+                }}
+              />
             </div>
 
             {hasChildren && !isCollapsed && (
@@ -254,13 +237,11 @@ const TreeNodeComponent = forwardRef<TreeNodeRef, TreeNodeProps>(
           </div>
         );
       },
-      [collapsedNodes, editingNodeId, props]
+      [collapsedNodes, props]
     );
 
     return props.nodes.map((node: TreeNode) => renderNode(node));
   }
 );
 
-const removeTrailingSlash = (str: string) => str.replace(/\/$/, "");
-
-export default TreeNodeComponent;
+export default ExplorerPanel;

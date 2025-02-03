@@ -49,6 +49,7 @@ const createNode = (
     id: generateId(),
     name,
     path,
+    isTemp: true,
     ...(isFolder ? { children: [] } : {}),
   };
 };
@@ -58,6 +59,29 @@ const processNode = (
   selectedNodeId: string,
   newNode: TreeNode
 ): TreeNode[] => {
+  const selectedIndex = nodes.findIndex((node) => node.id === selectedNodeId);
+
+  if (selectedIndex !== -1) {
+    const rootNode = nodes[selectedIndex];
+
+    // 如果是文件夹
+    if (rootNode.name.endsWith("/")) {
+      return nodes.map((node, idx) => {
+        if (idx === selectedIndex) {
+          return {
+            ...node,
+            children: [...(node.children || []), newNode],
+          };
+        }
+        return node;
+      });
+    } else {
+      // 如果是文件，就把 newNode 当作同级节点插入
+      const newNodes = [...nodes];
+      newNodes.splice(selectedIndex + 1, 0, newNode);
+      return newNodes;
+    }
+  }
   return nodes.map((node) => {
     // 如果当前节点有子节点并且它们之中有选中的节点
     if (node.children?.some((child) => child.id === selectedNodeId)) {
