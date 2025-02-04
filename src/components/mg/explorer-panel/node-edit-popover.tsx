@@ -3,12 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
-  PopoverTrigger,
   PopoverContent,
+  PopoverAnchor,
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
-import { useRef } from "react";
-import { SquarePen } from "lucide-react";
+import { ReactElement, useRef } from "react";
 import { PopoverProps } from "@radix-ui/react-popover";
 
 interface NodeEditPopoverProps extends PopoverProps {
@@ -16,11 +15,13 @@ interface NodeEditPopoverProps extends PopoverProps {
   defaultComment?: string;
   defaultIsFolder: boolean;
   open: boolean; // 必须由外部传入
+  anchor: ReactElement | null; // 父组件传进来的定位元素
   setOpen: (open: boolean, action?: "save" | "cancel") => void; // 必须由外部传入
   onConfirm: (values: { name: string; comment: string }) => void;
 }
 
 export function NodeEditPopover({
+  anchor,
   defaultName,
   defaultComment,
   defaultIsFolder,
@@ -53,18 +54,9 @@ export function NodeEditPopover({
   const handleCancel = () => {
     setOpen(false, "cancel");
   };
-
   return (
     <Popover open={open} onOpenChange={setOpen} {...popoverProps}>
-      <PopoverTrigger asChild>
-        <SquarePen
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpen(true);
-          }}
-          className="w-4 h-4 ml-auto text-gray-500 hover:text-blue-500"
-        />
-      </PopoverTrigger>
+      <PopoverAnchor asChild>{anchor}</PopoverAnchor>
       <PopoverContent
         className="w-72 p-4 space-y-4"
         align="end"

@@ -1,4 +1,10 @@
-import { ChevronDown, ChevronRight, FileText, Folder } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  FileText,
+  Folder,
+  SquarePen,
+} from "lucide-react";
 import { useState, forwardRef, useImperativeHandle, useCallback } from "react";
 import { TreeNode } from "@/typings";
 import {
@@ -22,9 +28,13 @@ interface ExplorerPanelProps {
   nodes: TreeNode[];
   level?: number;
   selectedNodeIds: string[];
-  editingNodeId: string | null;
-  setEditingNodeId: (id: string | null) => void;
-  onSelectNode: (id: string, ctrlKey: boolean, shiftKey: boolean) => void;
+  editingNode: TreeNode | null;
+  setEditingNode: (node: TreeNode | null) => void;
+  onSelectNode: (
+    id: string | null,
+    ctrlKey: boolean,
+    shiftKey: boolean
+  ) => void;
   disabled?: boolean;
   onRemoveTempNode: (id: string) => void;
   onUpdateNode: (id: string, updates: Partial<TreeNode>) => void;
@@ -143,23 +153,20 @@ const ExplorerPanel = forwardRef<ExplorerPanelRef, ExplorerPanelProps>(
           }
         };
         const displayName = removeTrailingSlash(node.name);
-        const handleOpenChange = (
-          nextOpen: boolean,
-          action?: "cancel" | "save"
-        ) => {
-          if (!nextOpen) {
-            // 正在关闭 Popover
-            if (action === "cancel" && node.isTemp) {
-              // 调用父组件 removeNode 或 handleCancelTempNode
-              props.onRemoveTempNode(node.id);
-            }
-            props.setEditingNodeId(null);
-          } else {
-            // 打开 Popover
-            props.setEditingNodeId(node.id);
-          }
-        };
 
+        const editButton = (
+          <button
+            type="button"
+            className="ml-auto text-gray-500 hover:text-blue-500"
+            onClick={(e) => {
+              e.stopPropagation();
+              props.setEditingNode(node);
+              props.onSelectNode?.(node.id, false, false);
+            }}
+          >
+            <SquarePen className="w-4 h-4" />
+          </button>
+        );
         return (
           <div
             key={node.id}
@@ -209,24 +216,38 @@ const ExplorerPanel = forwardRef<ExplorerPanelRef, ExplorerPanelProps>(
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-
-              {/* 替换成 Popover 方式编辑 */}
-              <NodeEditPopover
-                open={props.editingNodeId === node.id}
-                setOpen={handleOpenChange}
-                defaultName={displayName}
-                defaultIsFolder={isFolder}
-                defaultComment={node.comment ?? ""}
-                onConfirm={({ name, comment }) => {
-                  props.onUpdateNode(node.id, {
-                    name,
-                    comment,
-                    isTemp: false,
-                  });
-                }}
-              />
+              {props.editingNode?.id === node.id ? (
+                <NodeEditPopover
+                  open={props.editingNode !== null}
+                  setOpen={(nextOpen: boolean, action?: "cancel" | "save") => {
+                    if (!nextOpen) {
+                      if (action === "cancel" && node.isTemp) {
+                        props.onRemoveTempNode(node.id);
+                        props.onSelectNode?.(null, false, false);
+                      }
+                      props.setEditingNode(null);
+                    } else {
+                      props.setEditingNode(node);
+                    }
+                  }}
+                  defaultName={removeTrailingSlash(node.name)}
+                  defaultIsFolder={node.name.endsWith("/")}
+                  defaultComment={node.comment ?? ""}
+                  onConfirm={({ name, comment }) => {
+                    props.onUpdateNode(node.id, {
+                      name,
+                      comment,
+                      isTemp: false,
+                    });
+                  }}
+                  // 直接把编辑按钮作为 anchor 传入
+                  anchor={editButton}
+                />
+              ) : (
+                // 未编辑状态下正常显示编辑按钮
+                editButton
+              )}
             </div>
-
             {hasChildren && !isCollapsed && (
               <div>
                 {node.children!.map((child) => renderNode(child, level + 1))}

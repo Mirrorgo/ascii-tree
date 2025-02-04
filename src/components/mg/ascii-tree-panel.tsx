@@ -195,12 +195,14 @@ const AsciiLine: React.FC<AsciiLineProps> = ({
     const nameWithoutSlash = isFolder ? trimmed.slice(0, -1) : trimmed;
 
     return (
-      <span
-        className={isAsciiColored && isFolder ? "text-blue-700" : undefined}
-      >
-        {nameWithoutSlash}
+      <>
+        <span
+          className={isAsciiColored && isFolder ? "text-blue-700" : undefined}
+        >
+          {nameWithoutSlash}
+        </span>
         {showTrailingSlash && isFolder && "/"}
-      </span>
+      </>
     );
   };
 

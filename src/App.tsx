@@ -134,6 +134,7 @@ function App() {
 
     setFileTree(newTree);
     setSelectedNodeIds([]);
+    setLastSelectedId(null);
 
     const newText = treeToMarkdown(newTree);
     setTextState({
@@ -150,10 +151,15 @@ function App() {
   };
 
   const handleNodeSelection = (
-    id: string,
+    id: string | null,
     ctrlKey: boolean,
     shiftKey: boolean
   ) => {
+    if (!id) {
+      setSelectedNodeIds([]);
+      setLastSelectedId(null);
+      return;
+    }
     if (ctrlKey) {
       // Ctrl+点击的逻辑保持不变
       setSelectedNodeIds((prev) =>
@@ -335,7 +341,8 @@ function App() {
       newTree = processNode(fileTree, selectedNodeId, newNode);
     }
     setFileTree(newTree);
-    setEditingNodeId(newNode.id);
+    setEditingNode(newNode);
+    setSelectedNodeIds([newNode.id]);
     return;
   };
 
@@ -344,7 +351,7 @@ function App() {
     let newNode: TreeNode;
     let newTree: TreeNode[];
     if (selectedNodeIds.length === 0) {
-      newNode = createNode(folderName, true);
+      newNode = createNode(folderName, false);
       newTree = [...fileTree, newNode];
     } else {
       let parentPath = "";
@@ -360,7 +367,8 @@ function App() {
       newTree = processNode(fileTree, selectedNodeId, newNode);
     }
     setFileTree(newTree);
-    setEditingNodeId(newNode.id);
+    setEditingNode(newNode);
+    setSelectedNodeIds([newNode.id]);
     return;
   };
 
@@ -395,7 +403,7 @@ function App() {
 
   const onRemoveTempNode = useCallback((nodeId: string) => {
     setFileTree((prev) => removeNodes(prev, [nodeId]));
-    setEditingNodeId(null);
+    setEditingNode(null);
   }, []);
 
   const handleShare = () => {
@@ -408,7 +416,7 @@ function App() {
     });
   };
 
-  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [editingNode, setEditingNode] = useState<TreeNode | null>(null);
 
   return (
     <div className="h-screen flex flex-col">
@@ -565,14 +573,12 @@ function App() {
                   <div className="flex-1 overflow-auto min-h-0">
                     <ExplorerPanel
                       onRemoveTempNode={onRemoveTempNode}
-                      editingNodeId={editingNodeId}
-                      setEditingNodeId={setEditingNodeId}
+                      editingNode={editingNode}
+                      setEditingNode={setEditingNode}
                       ref={explorerPanelRef}
                       nodes={fileTree}
                       selectedNodeIds={selectedNodeIds}
-                      onSelectNode={(id, ctrlKey, shiftKey) =>
-                        handleNodeSelection(id, ctrlKey, shiftKey)
-                      }
+                      onSelectNode={handleNodeSelection}
                       onUpdateNode={onUpdateNode}
                       disabled={isTreeLocked}
                     />

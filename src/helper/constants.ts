@@ -2,7 +2,7 @@ import { TreeNode } from "@/typings";
 
 const BASIC_ASCII_TREE_TEMPLATE = `root/
 └── folder1/
-    ├── file1
+    ├── file1 # This is a comment
     └── file2
 root2/
 └── folder2/
@@ -268,6 +268,7 @@ const INITIAL_TREE: TreeNode[] = [
             id: "2",
             name: "file1",
             path: "root/folder1/file1",
+            comment: "This is a comment",
           },
           {
             id: "3",
