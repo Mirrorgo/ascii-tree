@@ -119,32 +119,35 @@ enable comment in file and get gitignore as directoryIgnore
 
 
 
-推广之前必须做的事情
+1.0之前必须做的事情
 - done
   - 批量tab和un tab
   - 支持自动添加 /
   - 支持注释
   - 新建node时逻辑优化
     - 手动填入内容，光标移动过去
-- todo
-  - 优化默认的项目，默认的和reset的应该不是从ascii-tree来，而是从text来
-    - 因为：需要支持自动识别auto slash的功能
-  - 新建node时逻辑优化
-    - validate node
   - 有comment的部分需要正常着色
-  - 统一comment有关的识别逻辑
-  - add node的相关逻辑
-  - format逻辑优化，保证光标位置正确
-    - 还是现有format，然后计算光标新位置
-  - 支持强制解析ascii tree
+  - 版本号1.0
+
+- todo
   - 没有已知bug
   - 支持中文
-  - 版本号1.0
-  - contribution之前先发个issue告知一声，看看需不需要，以及是否和我做重了
-    - 对于不希望加的功能，提议自己fork
 
-推广后feature
+
+1.0后的feature
+- 统一comment有关的识别逻辑
+- 支持强制解析ascii tree
+- 统一validate逻辑
+  - validate与其他逻辑分离，牺牲少量性能换取可维护性
+  - 存在两个validate阶段，一个是本身的（比如indent不对），一个是通用的（比如非文件夹节点不可能存在子集）
+    - 通用的部分构建一个临时新树，然后validate
+- 新建node时逻辑优化
+    - validate node
 - ctrl+/ 切换到注释部分
+- format逻辑优化，保证光标位置正确
+  - 还是现有format，然后计算光标新位置
+- 优化默认的项目，默认的和reset的应该不是从ascii-tree来，而是从text来
+  - 因为：需要支持自动识别auto slash的功能
 - 行号
   - 一个小眼睛 👁 / 放在行号正上方，默认打开，点击会给👁 加个斜杠/
   - wrap时的行号
@@ -168,18 +171,11 @@ enable comment in file and get gitignore as directoryIgnore
 - 从md文档直接读取无序列表，方便网友贡献模板
   - 后续增加从自己的无需列表直接输入，这样一些不方便传上去的也能用了，比如自己公司内网的
 - profiler性能优化
+- contribution之前先发个issue告知一声，看看需不需要，以及是否和我做重了
+  - 对于不希望加的功能，提议自己fork
 
 # 当前剩余bug
-顶级节点有时无法正常add
-```
-.gitignore
-README.md
-tailwind.config.js
-tsconfig.app.json
-tsconfig.json
-tsconfig.node.json
-vite.config.ts
-```
+
 
 # 当前可优化
 统一对文本处理的正则：两种

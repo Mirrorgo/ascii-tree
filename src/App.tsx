@@ -49,6 +49,7 @@ import ExplorerPanel, {
   ExplorerPanelRef,
 } from "./components/mg/explorer-panel";
 import { removeNodes } from "./helper/global.ts";
+import NotificationButton from "./components/mg/notification-button.tsx";
 
 function App() {
   const { toast } = useToast();
@@ -423,19 +424,23 @@ function App() {
       <div className="w-full border-b px-2 mt-2 mb-2">
         <div className="flex justify-between items-center">
           <a
-            className="flex items-center"
             target="_blank"
             href="https://github.com/Mirrorgo/ascii-tree/"
+            className="inline break-words"
           >
-            <div className="font-bold text-xl mr-2">
+            <span className="font-bold text-xl">
               TreeScii - ASCII Tree Generator
-            </div>
-            <Github className="cursor-pointer" />
+            </span>{" "}
+            <Github className="inline-block align-text-bottom" />
           </a>
-          <div className="space-x-4">
-            <Button size="icon" variant="ghost" onClick={handleShare}>
-              <Share2 />
-            </Button>
+
+          <div className="space-x-4 flex">
+            <div className="space-x-1">
+              <NotificationButton />
+              <Button size="icon" variant="ghost" onClick={handleShare}>
+                <Share2 />
+              </Button>
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="icon">
