@@ -124,13 +124,16 @@ enable comment in file and get gitignore as directoryIgnore
   - 批量tab和un tab
   - 支持自动添加 /
   - 支持注释
+  - 新建node时逻辑优化
+    - 手动填入内容，光标移动过去
 - todo
+  - 优化默认的项目，默认的和reset的应该不是从ascii-tree来，而是从text来
+    - 因为：需要支持自动识别auto slash的功能
+  - 新建node时逻辑优化
+    - validate node
   - 有comment的部分需要正常着色
   - 统一comment有关的识别逻辑
   - add node的相关逻辑
-  - 新建node时逻辑优化
-    - 手动填入内容，光标移动过去
-    - validate node
   - format逻辑优化，保证光标位置正确
     - 还是现有format，然后计算光标新位置
   - 支持强制解析ascii tree

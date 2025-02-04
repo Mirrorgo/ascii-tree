@@ -117,13 +117,23 @@ function parseAsciiTree(asciiText: string): TreeNode[] {
       // 将新节点推入栈
       stack.push({ node: newNode, level });
     } else {
+      const content = line.trim();
       // 如果没有分支符号，认为是根节点
-      const name = line.trim();
+      // ^(.*?) 表示从开头到第一个 # 之间的任意内容（非贪婪）
+      // #       匹配第一个 #
+      // ([\s\S]*) 表示后续所有字符（包括换行等）
+      const match = content.match(/^(.*?)#([\s\S]*)$/);
+
+      // 如果匹配不到，就说明没有 #，此时把整个 content 当成 name
+      const name = match ? match[1].trim() : content.trim();
+      // match?[2] 可能是 undefined，所以用可选链和 || 来兜底
+      const comment = match?.[2].trim() || undefined;
       const isFolder = name.endsWith("/");
       const newNode: TreeNode = {
         id: generateId(),
         name: isFolder ? name : name,
         path: isFolder ? name.slice(0, -1) + "/" : name,
+        comment,
         // children 未设置，默认为 undefined
       };
       roots.push(newNode);

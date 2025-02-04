@@ -218,8 +218,6 @@ const ExplorerPanel = forwardRef<ExplorerPanelRef, ExplorerPanelProps>(
                 defaultIsFolder={isFolder}
                 defaultComment={node.comment ?? ""}
                 onConfirm={({ name, comment }) => {
-                  // 1. 如果是临时节点, 需要去掉 isTemp
-                  // 2. 更新节点信息
                   props.onUpdateNode(node.id, {
                     name,
                     comment,

@@ -279,7 +279,6 @@ const preprocess = (text: string, config: EditorConfig) => {
     | { isFixed: false; fixedLine: null };
   function autoSlash(line: string, nextLine: string): AutoSlashResult {
     const match = line.match(/^(\s*)-\s+([^#]+)(?:\s*#\s*(.*))?$/);
-    // const match = line.match(/^(\s*)-(\s+.+)$/);
     const nextLineMatch = nextLine.match(/^(\s*)(?:[├└]──\s+|\-\s+)(.+)$/);
     if (!match || !nextLineMatch) return { isFixed: false, fixedLine: null }; // 交给validator去处理吧
     const [, indent, content] = match;
