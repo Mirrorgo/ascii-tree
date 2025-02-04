@@ -43,12 +43,25 @@ const AsciiTreePanel = ({
 
   // 处理ASCII内容
   const processAsciiContent = (rawAscii: string) => {
-    return showTrailingSlash
-      ? rawAscii
-      : rawAscii
-          .split("\n")
-          .map((line) => (line.endsWith("/") ? line.slice(0, -1) : line))
-          .join("\n");
+    const lines = rawAscii.split("\n");
+    const processLine = (rawLine: string) => {
+      const commentMatch = rawLine.match(/^(.*?)#(.*)$/);
+      if (!commentMatch) {
+        const trimmed = rawLine.trim();
+        const isFolder = trimmed.endsWith("/");
+        const nameWithoutSlash = isFolder ? trimmed.slice(0, -1) : trimmed;
+        return `${nameWithoutSlash}${showTrailingSlash && isFolder ? "/" : ""}`;
+      } else {
+        const [, name, comment] = commentMatch;
+        const trimmed = name.trim();
+        const isFolder = trimmed.endsWith("/");
+        const nameWithoutSlash = isFolder ? trimmed.slice(0, -1) : trimmed;
+        return `${nameWithoutSlash}${
+          showTrailingSlash && isFolder ? "/" : ""
+        } #${comment}`;
+      }
+    };
+    return lines.map((cur) => processLine(cur)).join("\n");
   };
 
   const rawAscii = generateAscii(fileTree);
@@ -153,35 +166,61 @@ const AsciiTreePanel = ({
   );
 };
 
-// 用于渲染单行ASCII文本的组件,主要是着色
-const AsciiLine = ({
-  line,
-  showTrailingSlash,
-  isAsciiColored,
-}: {
+interface AsciiLineProps {
   line: string;
   showTrailingSlash: boolean;
   isAsciiColored: boolean;
+}
+// 用于渲染单行ASCII文本的组件,主要是着色
+const AsciiLine: React.FC<AsciiLineProps> = ({
+  line,
+  showTrailingSlash,
+  isAsciiColored,
 }) => {
-  const match = line.match(/(.*?[└├]── )?(.+?)(\/?$)/);
-
-  if (!match) {
+  // 提取前缀和内容，例如 "├── "、"└── "等结构
+  const lineMatch = line.match(/(.*?[└├]── )?(.*)/);
+  if (!lineMatch) {
     return <div>{line}</div>;
   }
 
-  const [, prefix = "", name, slash = ""] = match;
+  const [, prefix = "", content] = lineMatch;
 
+  // 尝试提取注释（# 之后的部分）
+  const commentMatch = content.match(/^(.*?)#(.*)$/);
+
+  // 渲染文件或文件夹名称（去除尾部斜杠、控制颜色等）
+  const renderName = (rawName: string) => {
+    const trimmed = rawName.trim();
+    const isFolder = trimmed.endsWith("/");
+    const nameWithoutSlash = isFolder ? trimmed.slice(0, -1) : trimmed;
+
+    return (
+      <span
+        className={isAsciiColored && isFolder ? "text-blue-700" : undefined}
+      >
+        {nameWithoutSlash}
+        {showTrailingSlash && isFolder && "/"}
+      </span>
+    );
+  };
+
+  // 无注释的情况
+  if (!commentMatch) {
+    return (
+      <div>
+        {prefix}
+        {renderName(content)}
+      </div>
+    );
+  }
+
+  // 有注释的情况
+  const [, name, comment] = commentMatch;
   return (
     <div>
       {prefix}
-      <span
-        className={
-          isAsciiColored && slash === "/" ? "text-blue-700" : undefined
-        }
-      >
-        {name}
-      </span>
-      {showTrailingSlash ? slash : ""}
+      {renderName(name)}{" "}
+      <span className={isAsciiColored ? "text-gray-500" : ""}>#{comment}</span>
     </div>
   );
 };
