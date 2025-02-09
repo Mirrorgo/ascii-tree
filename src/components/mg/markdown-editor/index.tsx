@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Info, Undo2 } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import TextEditor, { TextEditorRef } from "./text-editor";
-import { TextState } from "@/typings";
+import { ParseErrorType, TextState } from "@/typings";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
@@ -51,6 +51,12 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
       onChange(value, config);
     }, [config.autoSlash]);
     const { t } = useTranslation();
+    const getErrorInfo = (type: ParseErrorType) => {
+      return {
+        title: t(`parseError.markdown.${type}.title`),
+        content: t(`parseError.markdown.${type}.content`),
+      };
+    };
 
     return (
       <div className="flex-1 flex flex-col h-full m-1 relative">
@@ -86,12 +92,13 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
               <div className="flex gap-3 items-center">
                 <AlertTriangle className="h-5 w-5 mb-1" />
                 <div>
-                  <AlertTitle>
-                    {(() => {
-                      const { location, type } = textState.error;
-                      return (
-                        <>
-                          {type} at{" "}
+                  {(() => {
+                    const { location, type } = textState.error;
+                    const { content, title } = getErrorInfo(type);
+                    return (
+                      <>
+                        <AlertTitle>
+                          {title}{" "}
                           <Button
                             variant="link"
                             size="sm"
@@ -102,11 +109,11 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
                           >
                             {`[Ln ${location.line}, Col ${location.column}]`}
                           </Button>
-                        </>
-                      );
-                    })()}
-                  </AlertTitle>
-                  <div>{textState.error.content}</div>
+                        </AlertTitle>
+                        <div>{content}</div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
               <Button variant="destructive" size="icon" onClick={onUndo}>

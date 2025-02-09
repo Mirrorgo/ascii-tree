@@ -184,8 +184,7 @@ function isValidAsciiTree(text: string): {
       valid: false,
       errors: [
         {
-          type: "Empty Input",
-          content: "Input is empty",
+          type: "emptyLine",
           location: { line: 0, column: 0 },
         },
       ],
@@ -201,8 +200,7 @@ function isValidAsciiTree(text: string): {
     const indentMatch = rawLine.match(indentRegex);
     if (!indentMatch) {
       errors.push({
-        type: "Invalid Line Format",
-        content: `Invalid line format at line ${lineNumber}`,
+        type: "invalidFormat",
         location: { line: lineNumber, column: 1 },
       });
       continue;
@@ -233,8 +231,8 @@ function isValidAsciiTree(text: string): {
       // 比如 "├───" 或 "└─" 等 => 视为无效格式
       if (/^[├└]/.test(remainder)) {
         errors.push({
-          type: "Invalid Line Format",
-          content: `Malformed branch symbol at line ${lineNumber}`,
+          type: "invalidBranchSymbol",
+          // content: `Malformed branch symbol at line ${lineNumber}`,
           location: { line: lineNumber, column: indentBlocks.length + 1 },
         });
         continue;
@@ -251,8 +249,7 @@ function isValidAsciiTree(text: string): {
       const rootName = nodeName.trim();
       if (globalRootNames.has(rootName)) {
         errors.push({
-          type: "Duplicate Node Name",
-          content: `Duplicate root node name '${rootName}' at line ${lineNumber}`,
+          type: "duplicateNodeName",
           location: { line: lineNumber, column: indentBlocks.length + 1 },
         });
       } else {
@@ -271,8 +268,7 @@ function isValidAsciiTree(text: string): {
       // 4.1 若 stack 为空 => 无法确定父节点 => 报错
       if (stack.length === 0) {
         errors.push({
-          type: "Orphan Node",
-          content: `Node at line ${lineNumber} has no valid parent`,
+          type: "orphanNode",
           location: { line: lineNumber, column: indentBlocks.length + 1 },
         });
         continue;
@@ -282,8 +278,7 @@ function isValidAsciiTree(text: string): {
       const top = stack[stack.length - 1];
       if (level > top.level + 1) {
         errors.push({
-          type: "Invalid Indentation",
-          content: `Indentation skipped levels at line ${lineNumber}`,
+          type: "invalidIndentation",
           location: { line: lineNumber, column: indentBlocks.length + 1 },
         });
         continue;
@@ -296,8 +291,7 @@ function isValidAsciiTree(text: string): {
 
       if (stack.length === 0) {
         errors.push({
-          type: "Orphan Node",
-          content: `Node at line ${lineNumber} has no valid parent`,
+          type: "orphanNode",
           location: { line: lineNumber, column: indentBlocks.length + 1 },
         });
         continue;
@@ -307,8 +301,7 @@ function isValidAsciiTree(text: string): {
       const parent = stack[stack.length - 1];
       if (parent.siblings.has(nodeName)) {
         errors.push({
-          type: "Duplicate Node Name",
-          content: `Duplicate node name '${nodeName}' at line ${lineNumber}`,
+          type: "duplicateNodeName",
           location: { line: lineNumber, column: indentBlocks.length + 1 },
         });
       } else {

@@ -18,7 +18,7 @@
   "linkCopied": "链接已复制",
   "linkCopiedDescription": "链接已复制到剪贴板",
   "editor": {
-    "placeholder": "开始输入...（支持 Alt+↑↓ 移动行，Tab/Shift+Tab 调整缩进，输入 - 创建列表）",
+    "placeholder": "\n开始输入...（支持 Alt+↑↓ 移动行，Tab/Shift+Tab 调整缩进，输入 - 创建列表）",
     "autoSlash": "自动添加斜杠",
     "autoSlashTooltip": "自动为有子节点的节点添加 '/'"
   },
@@ -37,5 +37,74 @@
     "increaseIndent": "增加缩进",
     "decreaseIndent": "减少缩进",
     "createListItem": "创建列表项"
+  },
+  "notification": {
+    "changelogTitle": "更新日志"
+  },
+  "parseError": {
+    "markdown": {
+      "missingDash": {
+        "title": "缺少破折号",
+        "content": "每个列表项必须以 '-' 开头。"
+      },
+      "missingSpace": {
+        "title": "缺少空格",
+        "content": "破折号 '-' 后必须跟一个空格。"
+      },
+      "missingContent": {
+        "title": "缺少内容",
+        "content": "列表项必须在 '- ' 后提供内容。"
+      },
+      "invalidFormat": {
+        "title": "格式错误",
+        "content": "该行的格式不正确。"
+      },
+      "invalidIndentation": {
+        "title": "缩进错误",
+        "content": "缩进的空格数必须是 2 的倍数。"
+      },
+      "emptyNodeName": {
+        "title": "节点名称为空",
+        "content": "节点名称不能为空。"
+      },
+      "invalidFileNode": {
+        "title": "非法文件节点",
+        "content": "文件节点不能包含子节点。"
+      },
+      "duplicateNodeName": {
+        "title": "重复的节点名称",
+        "content": "同级目录下已存在相同名称的节点。"
+      },
+      "emptyLine": {
+        "title": "空行",
+        "content": "该行为空，无法处理。"
+      },
+      "unknownError": {
+        "title": "未知错误",
+        "content": "发生了意外错误。"
+      }
+    },
+    "ascii": {
+      "invalidFormat": {
+        "title": "格式错误",
+        "content": "ASCII 树格式不正确。"
+      },
+      "invalidBranchSymbol": {
+        "title": "无效的分支符号",
+        "content": "无效的分支符号"
+      },
+      "duplicateNodeName": {
+        "title": "重复的节点名称",
+        "content": "同级目录下已存在相同名称的节点。"
+      },
+      "invalidIndentation": {
+        "title": "缩进错误",
+        "content": "缩进不正确"
+      },
+      "orphanNode": {
+        "title": "孤立节点",
+        "content": "节点 '{node}' 没有有效的父节点。这可能是由于缩进错误或缺少父节点所致。"
+      }
+    }
   }
 }

@@ -197,12 +197,11 @@ describe("Markdown Tree Parser", () => {
 
         expect(result.tree).toEqual([]);
         expect(result.error).toMatchObject({
-          content: "Empty line",
           location: {
             column: 1,
             line: 1,
           },
-          type: "Empty Line",
+          type: "emptyLine",
         });
       });
 
@@ -214,7 +213,7 @@ describe("Markdown Tree Parser", () => {
 
         expect(result.tree).toEqual([]);
         expect(result.error).toMatchObject({
-          type: "Invalid Indentation",
+          type: "invalidIndentation",
           location: { line: 2, column: 3 },
         });
       });
@@ -229,7 +228,7 @@ describe("Markdown Tree Parser", () => {
 
           expect(result.tree).toEqual([]);
           expect(result.error).toMatchObject({
-            type: "Duplicate Node Name",
+            type: "duplicateNodeName",
             location: { line: 3 },
           });
         });
@@ -242,7 +241,7 @@ describe("Markdown Tree Parser", () => {
 
           expect(result.tree).toEqual([]);
           expect(result.error).toMatchObject({
-            type: "Duplicate Node Name",
+            type: "duplicateNodeName",
             location: { line: 2 },
           });
         });
@@ -257,7 +256,7 @@ describe("Markdown Tree Parser", () => {
 
         expect(result.tree).toEqual([]);
         expect(result.error).toMatchObject({
-          type: "Invalid File Node",
+          type: "invalidFileNode",
           location: { line: 2 },
         });
       });
@@ -293,7 +292,7 @@ describe("Markdown Tree Parser", () => {
 
         expect(result.tree).toEqual([]);
         expect(result.error).toMatchObject({
-          type: "Missing Dash",
+          type: "missingDash",
           location: { line: 2 },
         });
       });

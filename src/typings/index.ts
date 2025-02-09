@@ -1,6 +1,17 @@
+type ParseErrorType =
+  | "missingDash"
+  | "missingSpace"
+  | "missingContent"
+  | "invalidFormat"
+  | "invalidIndentation"
+  | "emptyNodeName"
+  | "invalidFileNode"
+  | "duplicateNodeName"
+  | "emptyLine"
+  | "invalidBranchSymbol" // ascii特有的错误类型
+  | "orphanNode"; // ascii特有的错误类型
 interface ParseError {
-  content: string;
-  type: string;
+  type: ParseErrorType;
   location: {
     line: number;
     column: number;
@@ -51,4 +62,5 @@ export type {
   HistoryEntry,
   ParseError,
   ParsedNode,
+  ParseErrorType,
 };

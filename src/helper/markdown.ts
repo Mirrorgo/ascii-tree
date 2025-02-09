@@ -55,8 +55,7 @@ const parseMarkdownToNodes = (text: string): { parsedNodes: ParsedNode[] } => {
     // 验证同级节点名称是否重复
     if (siblingsSet.has(name)) {
       throw {
-        type: "Duplicate Node Name",
-        content: `Duplicate node name '${name}' at line ${lineIndex + 1}`,
+        type: "duplicateNodeName",
         location: {
           line: lineIndex + 1,
           column: line.indexOf(name) + name.length + (isFolder(name) ? 0 : 1),
@@ -102,8 +101,7 @@ function parseMarkdownLine(
   const firstNonSpace = line.search(/\S/);
   if (firstNonSpace === -1) {
     throw {
-      type: "Empty Line",
-      content: "Empty line",
+      type: "emptyLine",
       location: {
         line: lineIndex + 1,
         column: 1,
@@ -120,8 +118,7 @@ function parseMarkdownLine(
     if (dashIndex === -1) {
       // 未找到 '-'
       throw {
-        type: "Missing Dash",
-        content: "Line must start with '-' after indentation",
+        type: "missingDash",
         location: {
           line: lineIndex + 1,
           column: firstNonSpace + 1,
@@ -133,8 +130,7 @@ function parseMarkdownLine(
     const afterDash = line.slice(dashIndex + 1);
     if (!afterDash.startsWith(" ")) {
       throw {
-        type: "Missing Space",
-        content: "Dash must be followed by a space",
+        type: "missingSpace",
         location: {
           line: lineIndex + 1,
           column: dashIndex + 2,
@@ -142,8 +138,7 @@ function parseMarkdownLine(
       } as ParseError;
     } else if (!afterDash.slice(1).trim()) {
       throw {
-        type: "Missing Content",
-        content: "List item must have content after '- '",
+        type: "missingContent",
         location: {
           line: lineIndex + 1,
           column: dashIndex + 3,
@@ -151,8 +146,7 @@ function parseMarkdownLine(
       } as ParseError;
     } else {
       throw {
-        type: "Invalid Format",
-        content: "Invalid line format",
+        type: "invalidFormat",
         location: {
           line: lineIndex + 1,
           column: dashIndex + 2,
@@ -166,8 +160,7 @@ function parseMarkdownLine(
   // 检查缩进是否为 2 的倍数
   if (indent.length % 2 !== 0) {
     throw {
-      type: "Invalid Indentation",
-      content: "Indentation must be multiple of 2 spaces",
+      type: "invalidIndentation",
       location: {
         line: lineIndex + 1,
         column: indent.length,
@@ -181,8 +174,7 @@ function parseMarkdownLine(
   // 检查节点名称是否为空
   if (!nodeName) {
     throw {
-      type: "Empty Node Name",
-      content: "Node name cannot be empty",
+      type: "emptyNodeName",
       location: {
         line: lineIndex + 1,
         column: indent.length + 3,
@@ -198,8 +190,7 @@ function parseMarkdownLine(
       const nextLineIndent = nextLineMatch ? nextLineMatch[1].length / 2 : 0;
       if (nextLineIndent > currentLevel) {
         throw {
-          type: "Invalid File Node",
-          content: "File node cannot have children",
+          type: "invalidFileNode",
           location: {
             line: lineIndex + 1,
             column: indent.length + 3 + nodeName.length,

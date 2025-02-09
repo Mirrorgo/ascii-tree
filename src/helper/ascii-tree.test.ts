@@ -215,12 +215,11 @@ describe("Tree ASCII Processing", () => {
       const result = isValidAsciiTree("");
       expect(result.valid).toBe(false);
       expect(result.errors).toContainEqual({
-        content: "Input is empty",
         location: {
           column: 0,
           line: 0,
         },
-        type: "Empty Input",
+        type: "emptyLine",
       });
     });
 
@@ -229,12 +228,11 @@ describe("Tree ASCII Processing", () => {
       expect(result.valid).toBe(false);
       expect(result.errors).toContainEqual(
         expect.objectContaining({
-          content: "Node at line 1 has no valid parent",
           location: {
             column: 1,
             line: 1,
           },
-          type: "Orphan Node",
+          type: "orphanNode",
         })
       );
     });
@@ -247,8 +245,7 @@ describe("Tree ASCII Processing", () => {
       expect(result.valid).toBe(false);
       expect(result.errors).toContainEqual(
         expect.objectContaining({
-          type: "Invalid Line Format",
-          content: "Malformed branch symbol at line 2",
+          type: "invalidBranchSymbol",
           location: {
             column: 1,
             line: 2,
@@ -283,8 +280,7 @@ describe("Tree ASCII Processing", () => {
       // Check for the specific errors
       expect(result.errors[0]).toEqual(
         expect.objectContaining({
-          type: "Duplicate Node Name",
-          content: "Duplicate node name 'file1' at line 3",
+          type: "duplicateNodeName",
           location: {
             column: 1,
             line: 3,
@@ -294,8 +290,7 @@ describe("Tree ASCII Processing", () => {
 
       expect(result.errors[1]).toEqual(
         expect.objectContaining({
-          type: "Duplicate Node Name",
-          content: "Duplicate node name 'file1' at line 4",
+          type: "duplicateNodeName",
           location: {
             column: 1,
             line: 4,
@@ -313,12 +308,11 @@ root/
       expect(result.valid).toBe(false);
       expect(result.errors).toContainEqual(
         expect.objectContaining({
-          content: "Duplicate root node name 'root/' at line 3",
           location: {
             column: 1,
             line: 3,
           },
-          type: "Duplicate Node Name",
+          type: "duplicateNodeName",
         })
       );
     });

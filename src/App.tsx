@@ -37,7 +37,7 @@ import {
 } from "./components/ui/dropdown-menu";
 
 import { INITIAL_TREE } from "./helper/constants";
-import { TextState, TreeNode } from "./typings";
+import { ParseErrorType, TextState, TreeNode } from "./typings";
 import ShortcutsDialog from "./components/mg/shortcuts";
 import AsciiTreeParserDialog from "./components/mg/ascii-tree-parser-dialog";
 import AsciiTreePanel from "./components/mg/ascii-tree-panel";
@@ -223,6 +223,12 @@ function App() {
   const [isAsciiTreeCollapse, setIsAsciiTreeCollapse] = useState(false);
 
   const { defaultSize, maxSize, minSize } = useResponsivePanel();
+  const getAsciiErrorInfo = (type: ParseErrorType) => {
+    return {
+      title: t(`parseError.ascii.${type}.title`),
+      content: t(`parseError.ascii.${type}.content`),
+    };
+  };
 
   function handleFormatMarkdownList() {
     if (!textState.isValid) return;
@@ -305,7 +311,8 @@ function App() {
       }
     } else {
       const err = validateResult.errors[0];
-      const errMsg = `${err.type}: ${err.content}`;
+      const { content, title } = getAsciiErrorInfo(err.type);
+      const errMsg = `${title}: ${content}`;
       setAsciiParseError(errMsg);
     }
   }

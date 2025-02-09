@@ -18,7 +18,7 @@
   "linkCopied": "Link Copied",
   "linkCopiedDescription": "Link has been copied to clipboard",
   "editor": {
-    "placeholder": "Start typing... (Supports Alt+↑↓ to move lines, Tab/Shift+Tab to adjust indent level, - to create lists)",
+    "placeholder": "\nStart typing... (Supports Alt+↑↓ to move lines, Tab/Shift+Tab to adjust indent level, - to create lists)",
     "autoSlash": "Auto Slash",
     "autoSlashTooltip": "Automatically append '/' to nodes that have children"
   },
@@ -37,5 +37,74 @@
     "increaseIndent": "Increase indent level",
     "decreaseIndent": "Decrease indent level",
     "createListItem": "Create list item"
+  },
+  "notification": {
+    "changelogTitle": "Changelog"
+  },
+  "parseError": {
+    "markdown": {
+      "missingDash": {
+        "title": "Missing Dash",
+        "content": "Each list item must start with '-'."
+      },
+      "missingSpace": {
+        "title": "Missing Space",
+        "content": "A space must follow the '-'."
+      },
+      "missingContent": {
+        "title": "Missing Content",
+        "content": "A list item must have content after '- '."
+      },
+      "invalidFormat": {
+        "title": "Invalid Format",
+        "content": "The line format is incorrect."
+      },
+      "invalidIndentation": {
+        "title": "Invalid Indentation",
+        "content": "Indentation must be a multiple of 2 spaces."
+      },
+      "emptyNodeName": {
+        "title": "Empty Node Name",
+        "content": "Node names cannot be empty."
+      },
+      "invalidFileNode": {
+        "title": "Invalid File Node",
+        "content": "File nodes cannot have children."
+      },
+      "duplicateNodeName": {
+        "title": "Duplicate Node Name",
+        "content": "A node with the same name already exists."
+      },
+      "emptyLine": {
+        "title": "Empty Line",
+        "content": "The line is empty and cannot be processed."
+      },
+      "unknownError": {
+        "title": "Unknown Error",
+        "content": "An unexpected error occurred."
+      }
+    },
+    "ascii": {
+      "invalidFormat": {
+        "title": "Invalid Format",
+        "content": "The ASCII tree format is incorrect."
+      },
+      "invalidBranchSymbol": {
+        "title": "Invalid Branch Symbol",
+        "content": "Invalid branch symbol"
+      },
+      "duplicateNodeName": {
+        "title": "Duplicate Node Name",
+        "content": "A node with the same name already exists."
+      },
+      "invalidIndentation": {
+        "title": "Invalid Indentation",
+        "content": "Invalid indentation"
+      },
+      "orphanNode": {
+        "title": "Orphan Node",
+        "content": "The node '{node}' appears without a valid parent. This may be due to incorrect indentation or missing parent nodes."
+      }
+    }
   }
 }
