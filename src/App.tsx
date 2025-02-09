@@ -312,7 +312,7 @@ function App() {
     } else {
       const err = validateResult.errors[0];
       const { content, title } = getAsciiErrorInfo(err.type);
-      const errMsg = `${title}: ${content}`;
+      const errMsg = `${title}: ${content} [Ln ${err.location.line}]`;
       setAsciiParseError(errMsg);
     }
   }
