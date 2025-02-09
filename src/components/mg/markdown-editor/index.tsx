@@ -12,6 +12,7 @@ import TextEditor, { TextEditorRef } from "./text-editor";
 import { TextState } from "@/typings";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from "react-i18next";
 
 type EditorConfig = {
   autoSlash: boolean;
@@ -49,6 +50,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
     useEffect(() => {
       onChange(value, config);
     }, [config.autoSlash]);
+    const { t } = useTranslation();
 
     return (
       <div className="flex-1 flex flex-col h-full m-1 relative">
@@ -60,9 +62,9 @@ const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(
               setConfig((prev) => ({ ...prev, autoSlash: !prev.autoSlash }))
             }
           />
-          <Label htmlFor="auto-slash">Auto Slash</Label>
+          <Label htmlFor="auto-slash">{t("editor.autoSlash")}</Label>
           <div
-            title="Automatically append '/' to nodes that have children"
+            title={t("editor.autoSlashTooltip")}
             className="cursor-pointer rounded"
           >
             <Info size={16} strokeWidth={2} />

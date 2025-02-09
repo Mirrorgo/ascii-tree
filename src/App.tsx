@@ -50,6 +50,8 @@ import ExplorerPanel, {
 } from "./components/mg/explorer-panel";
 import { removeNodes } from "./helper/global.ts";
 import NotificationButton from "./components/mg/notification-button.tsx";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "./components/mg/language-switcher.tsx";
 
 function App() {
   const { toast } = useToast();
@@ -119,6 +121,8 @@ function App() {
     const prevTextState = undo();
     if (prevTextState) {
       setTextState(prevTextState);
+    } else {
+      handleReset();
     }
   }, [undo]);
 
@@ -407,12 +411,13 @@ function App() {
     setEditingNode(null);
   }, []);
 
+  const { t } = useTranslation();
   const handleShare = () => {
     const url = new URL(window.location.href);
     navigator.clipboard.writeText(url.href);
     toast({
-      title: "Link Copied",
-      description: "Link has been copied to clipboard",
+      title: t("linkCopied"),
+      description: t("linkCopiedDescription"),
       duration: 1000,
     });
   };
@@ -428,14 +433,13 @@ function App() {
             href="https://github.com/Mirrorgo/ascii-tree/"
             className="inline break-words"
           >
-            <span className="font-bold text-xl">
-              TreeScii - ASCII Tree Generator
-            </span>{" "}
+            <span className="font-bold text-xl">{t("title")}</span>{" "}
             <Github className="inline-block align-text-bottom" />
           </a>
 
           <div className="space-x-4 flex">
             <div className="space-x-1">
+              <LanguageSwitcher />
               <NotificationButton />
               <Button size="icon" variant="ghost" onClick={handleShare}>
                 <Share2 />
@@ -448,7 +452,7 @@ function App() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuLabel>View</DropdownMenuLabel>
+                <DropdownMenuLabel>{t("view")}</DropdownMenuLabel>
                 <DropdownMenuCheckboxItem
                   className="cursor-pointer"
                   checked={showExplorerPanel}
@@ -459,17 +463,17 @@ function App() {
                     }
                   }}
                 >
-                  Show Explorer Panel
+                  {t("showExplorerPanel")}
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
                   className="cursor-pointer"
                   checked={showResizeHandle}
                   onClick={() => setShowResizeHandle(!showResizeHandle)}
                 >
-                  Show Resize Handles
+                  {t("showResizeHandles")}
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                 <DropdownMenuItem
                   className="cursor-pointer"
                   disabled={!textState.isValid}
@@ -477,7 +481,7 @@ function App() {
                 >
                   {/* <DropdownMenuShortcut>⇧⌥F</DropdownMenuShortcut> */}
                   <div className="flex items-baseline gap-2">
-                    <div>Format Markdown List</div>
+                    <div>{t("formatMarkdownList")}</div>
                     <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
                   </div>
                 </DropdownMenuItem>
@@ -510,7 +514,7 @@ function App() {
               className="ml-3 font-bold"
               onClick={handleReset}
             >
-              Reset
+              {t("reset")}
             </Button>
             <ShortcutsDialog />
           </div>

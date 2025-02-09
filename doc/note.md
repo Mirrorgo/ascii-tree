@@ -168,6 +168,7 @@ enable comment in file and get gitignore as directoryIgnore
 - pwa
 - folder view选定后 sort文件夹下all内容
 - 节点拖拽排序
+- 支持sort，自动sort
 - 从md文档直接读取无序列表，方便网友贡献模板
   - 后续增加从自己的无需列表直接输入，这样一些不方便传上去的也能用了，比如自己公司内网的
 - profiler性能优化

@@ -10,9 +10,11 @@ import {
 } from "../ui/dialog";
 import { Command, Keyboard } from "lucide-react";
 import { Button } from "../ui/button";
+import { useTranslation } from "react-i18next";
 
 const Shortcuts = () => {
   const [isMac, setIsMac] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Check if user is on macOS
@@ -31,45 +33,41 @@ const Shortcuts = () => {
   return (
     <div className="space-y-4 mt-2">
       <div className="space-y-2 justify-items-center">
-        <h3 className="font-medium">Global Shortcuts</h3>
+        <h3 className="font-medium">{t("shortcuts.global")}</h3>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm justify-items-center">
           <div>{getModifierKey()} + Z</div>
-          <div>Undo last action</div>
+          <div>{t("shortcuts.undo")}</div>
           <div>{getModifierKey()} + Shift + Z</div>
-          <div>Redo last action</div>
+          <div>{t("shortcuts.redo")}</div>
           <div>{getModifierKey()} + S</div>
-          <div>Format markdown list</div>
+          <div>{t("shortcuts.formatMarkdown")}</div>
           <div>{getModifierKey()} + K</div>
-          <div>Show keyboard shortcuts</div>
+          <div>{t("shortcuts.showKeyboardShortcuts")}</div>
         </div>
       </div>
 
       <div className="space-y-2 justify-items-center">
-        <h3 className="font-medium">Explorer Panel</h3>
-        <Alert className="mt-4 text-muted-foreground ">
+        <h3 className="font-medium">{t("shortcuts.explorerPanel")}</h3>
+        <Alert className="mt-4 text-muted-foreground">
           <AlertDescription>
-            Pro tip: You can select multiple nodes by holding {getModifierKey()}{" "}
-            while clicking, or select a range using Shift.
+            {t("shortcuts.proTip", { modifier: getModifierKey() })}
           </AlertDescription>
         </Alert>
       </div>
 
       <div className="space-y-2 justify-items-center">
-        <h3 className="font-medium">Markdown List Panel</h3>
-        {/* <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm"> */}
+        <h3 className="font-medium">{t("shortcuts.markdownListPanel")}</h3>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm justify-items-center">
           <div>Alt + ↑</div>
-          <div>Move line up</div>
+          <div>{t("shortcuts.moveLineUp")}</div>
           <div>Alt + ↓</div>
-          <div>Move line down</div>
+          <div>{t("shortcuts.moveLineDown")}</div>
           <div>Tab</div>
-          <div>Increase indent level</div>
+          <div>{t("shortcuts.increaseIndent")}</div>
           <div>Shift + Tab</div>
-          <div>Decrease indent level</div>
-          <div>Enter (on list item)</div>
-          <div>Continue list</div>
-          <div>- (at line start)</div>
-          <div>Create list item</div>
+          <div>{t("shortcuts.decreaseIndent")}</div>
+          <div>-</div>
+          <div>{t("shortcuts.createListItem")}</div>
         </div>
       </div>
     </div>
@@ -78,6 +76,7 @@ const Shortcuts = () => {
 
 const ShortcutsDialog = () => {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -101,11 +100,12 @@ const ShortcutsDialog = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex justify-center items-center gap-4">
-            <div>Keyboard Shortcuts</div>
+            <div>{t("shortcuts.title")}</div>
             <div className="flex items-center gap-1 font-normal text-base">
               <Command size={16} />K
             </div>
           </DialogTitle>
+
           <DialogDescription>
             <Shortcuts />
           </DialogDescription>

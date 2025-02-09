@@ -18,6 +18,7 @@ import { TreeNode } from "@/typings";
 import { Toggle } from "../ui/toggle";
 import { Switch } from "../ui/switch";
 import { Label } from "../ui/label";
+import { useTranslation } from "react-i18next";
 
 type AsciiTreePanelProps = {
   asciiTreeRef: RefObject<ImperativePanelHandle>;
@@ -40,6 +41,7 @@ const AsciiTreePanel = ({
   const [showTrailingSlash, setShowTrailingSlash] = useState(true);
   const [isAsciiColored, setIsAsciiColored] = useState(true);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
+  const { t } = useTranslation();
 
   // 处理ASCII内容
   const processAsciiContent = (rawAscii: string) => {
@@ -110,7 +112,7 @@ const AsciiTreePanel = ({
         ) : (
           <ChevronDown />
         )}
-        <div className="font-bold uppercase translate-x-4">ascii</div>
+        <div className="font-bold uppercase translate-x-4">{t("ascii")}</div>
         <div className="-mr-2">
           <Toggle
             size="sm"
@@ -134,7 +136,7 @@ const AsciiTreePanel = ({
               checked={showTrailingSlash}
               onCheckedChange={setShowTrailingSlash}
             />
-            <Label htmlFor="trailing-slash">Trailing / </Label>
+            <Label htmlFor="trailing-slash">{t("trailingSlash")}</Label>
           </div>
           <div className="flex items-center space-x-1">
             <Switch
@@ -143,7 +145,7 @@ const AsciiTreePanel = ({
               checked={isAsciiColored}
               onCheckedChange={setIsAsciiColored}
             />
-            <Label htmlFor="coloring">Color</Label>
+            <Label htmlFor="coloring">{t("color")}</Label>
           </div>
         </div>
       )}

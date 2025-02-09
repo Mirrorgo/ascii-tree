@@ -1,0 +1,41 @@
+{
+  "generate_from_existing_ascii_tree": "Generate From Existing ASCII Tree",
+  "paste_ascii_tree": "Paste ASCII Tree",
+  "select_project_template": "Select a project template",
+  "paste_ascii_tree_placeholder": "Paste your ASCII tree here or select a template above",
+  "error": "Error",
+  "ok": "OK",
+  "ascii": "ASCII Tree",
+  "trailingSlash": "Trailing /",
+  "color": "Color",
+  "title": "TreeScii - ASCII Tree Generator",
+  "view": "View",
+  "showExplorerPanel": "Show Explorer Panel",
+  "showResizeHandles": "Show Resize Handles",
+  "actions": "Actions",
+  "formatMarkdownList": "Format Markdown List",
+  "reset": "Reset",
+  "linkCopied": "Link Copied",
+  "linkCopiedDescription": "Link has been copied to clipboard",
+  "editor": {
+    "placeholder": "Start typing... (Supports Alt+↑↓ to move lines, Tab/Shift+Tab to adjust indent level, - to create lists)",
+    "autoSlash": "Auto Slash",
+    "autoSlashTooltip": "Automatically append '/' to nodes that have children"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "global": "Global Shortcuts",
+    "undo": "Undo last action",
+    "redo": "Redo last action",
+    "formatMarkdown": "Format markdown list",
+    "showKeyboardShortcuts": "Show keyboard shortcuts",
+    "explorerPanel": "Explorer Panel",
+    "proTip": "Pro tip: You can select multiple nodes by holding {{modifier}} while clicking, or select a range using Shift.",
+    "markdownListPanel": "Markdown List Panel",
+    "moveLineUp": "Move line up",
+    "moveLineDown": "Move line down",
+    "increaseIndent": "Increase indent level",
+    "decreaseIndent": "Decrease indent level",
+    "createListItem": "Create list item"
+  }
+}

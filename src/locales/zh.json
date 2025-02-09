@@ -1,0 +1,41 @@
+{
+  "generate_from_existing_ascii_tree": "从现有 ASCII 树生成",
+  "paste_ascii_tree": "粘贴 ASCII 树",
+  "select_project_template": "选择一个项目模板",
+  "paste_ascii_tree_placeholder": "将您的 ASCII 树粘贴在此处或选择上面的模板",
+  "error": "错误",
+  "ok": "确定",
+  "ascii": "ASCII 树",
+  "trailingSlash": "末尾 /",
+  "color": "着色",
+  "title": "TreeScii - ASCII 树生成器",
+  "view": "视图",
+  "showExplorerPanel": "显示资源管理器面板",
+  "showResizeHandles": "显示调整大小的手柄",
+  "actions": "操作",
+  "formatMarkdownList": "格式化 Markdown 列表",
+  "reset": "重置",
+  "linkCopied": "链接已复制",
+  "linkCopiedDescription": "链接已复制到剪贴板",
+  "editor": {
+    "placeholder": "开始输入...（支持 Alt+↑↓ 移动行，Tab/Shift+Tab 调整缩进，输入 - 创建列表）",
+    "autoSlash": "自动添加斜杠",
+    "autoSlashTooltip": "自动为有子节点的节点添加 '/'"
+  },
+  "shortcuts": {
+    "title": "键盘快捷键",
+    "global": "全局快捷键",
+    "undo": "撤销上一个操作",
+    "redo": "重做上一个操作",
+    "formatMarkdown": "格式化 Markdown 列表",
+    "showKeyboardShortcuts": "显示键盘快捷键",
+    "explorerPanel": "资源管理器面板",
+    "proTip": "小技巧：按住 {{modifier}} 并点击可选择多个节点，或使用 Shift 选择一个范围。",
+    "markdownListPanel": "Markdown 列表面板",
+    "moveLineUp": "上移当前行",
+    "moveLineDown": "下移当前行",
+    "increaseIndent": "增加缩进",
+    "decreaseIndent": "减少缩进",
+    "createListItem": "创建列表项"
+  }
+}

@@ -7,6 +7,7 @@ import {
   forwardRef,
   useImperativeHandle,
 } from "react";
+import { useTranslation } from "react-i18next";
 
 export interface TextEditorRef {
   jumpToPosition: (lineNumber: number, column: number) => void;
@@ -27,15 +28,9 @@ interface EditorProps {
 }
 
 const TextEditor = forwardRef<TextEditorRef, EditorProps>(
-  (
-    {
-      initialValue = "",
-      onChange,
-      className = "",
-      placeholder = "\nStart typing... (Supports Alt+↑↓ to move lines, Tab/Shift+Tab to adjust indent level, - to create lists)",
-    },
-    ref
-  ) => {
+  ({ initialValue = "", onChange, className = "", placeholder }, ref) => {
+    const { t } = useTranslation();
+    const defaultPlaceholder = t("editor.placeholder");
     const [content, setContent] = useState<string>(initialValue);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     // 踪输入法组合状态
@@ -281,7 +276,7 @@ const TextEditor = forwardRef<TextEditorRef, EditorProps>(
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         className={`p-4 resize-none rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-base ${className}`}
-        placeholder={placeholder}
+        placeholder={placeholder || defaultPlaceholder} // 允许传入自定义 placeholder，否则使用翻译
         onCompositionStart={() => {
           isComposingRef.current = true;
         }}

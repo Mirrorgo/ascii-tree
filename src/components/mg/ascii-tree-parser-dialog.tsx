@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { PROJECT_TEMPLATES } from "@/helper/constants";
 import { Dispatch, MutableRefObject, SetStateAction, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 interface AsciiTreeParserDialogProps {
   isAsciiTreeParserDialogOpen: boolean;
@@ -51,6 +52,7 @@ const AsciiTreeParserDialog = ({
       asciiTreeTextAreaRef.current.value = PROJECT_TEMPLATES.basic.template;
     }
   }, [asciiTreeTextAreaRef]);
+  const { t } = useTranslation();
 
   return (
     <Dialog
@@ -64,18 +66,18 @@ const AsciiTreeParserDialog = ({
     >
       <DialogTrigger asChild>
         <Button variant="link" className="font-bold">
-          Generate From Existing ASCII Tree
+          {t("generate_from_existing_ascii_tree")}
           <WandSparkles className="ml-1 h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="mb-2">Paste ASCII Tree</DialogTitle>
+          <DialogTitle className="mb-2">{t("paste_ascii_tree")}</DialogTitle>
           <DialogDescription>
             <div className="space-y-4 text-foreground">
               <Select onValueChange={handleTemplateChange}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a project template" />
+                  <SelectValue placeholder={t("select_project_template")} />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(PROJECT_TEMPLATES).map(([key, { name }]) => (
@@ -90,13 +92,13 @@ const AsciiTreeParserDialog = ({
                 className="text-foreground font-mono"
                 ref={asciiTreeTextAreaRef}
                 rows={15}
-                placeholder="Paste your ASCII tree here or select a template above"
+                placeholder={t("paste_ascii_tree_placeholder")}
               />
 
               {asciiParseError && (
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Error</AlertTitle>
+                  <AlertTitle>{t("error")}</AlertTitle>
                   <div>{asciiParseError}</div>
                 </Alert>
               )}
@@ -104,7 +106,7 @@ const AsciiTreeParserDialog = ({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button onClick={handleParseAsciiTree}>OK</Button>
+          <Button onClick={handleParseAsciiTree}>{t("ok")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
