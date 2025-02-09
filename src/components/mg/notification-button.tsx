@@ -21,8 +21,8 @@ const changelogs: {
   };
 }[] = [
   {
-    version: "1.0.1",
-    date: "2025-02-05",
+    version: "1.1.0",
+    date: "2025-02-09",
     hot: false,
     content: {
       en: ["🌍 Now supporting both English and Chinese"],
