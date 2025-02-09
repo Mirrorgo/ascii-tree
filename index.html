@@ -3,8 +3,92 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/treescii.svg" />
+    <link rel="preload" as="image" href="/treescii.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TreeScii</title>
+
+    <!-- 页面标题（含中英文关键词） -->
+    <title>
+      TreeScii - Generate Beautiful ASCII Trees | 生成美观的 ASCII 树
+    </title>
+
+    <!-- 页面描述（中英双语） -->
+    <meta
+      name="description"
+      content="TreeScii is a powerful ASCII tree generator that lets you create and share beautiful hierarchical structures with ease. | TreeScii 是一个强大的 ASCII 树生成器，让你轻松创建和分享漂亮的层次结构。"
+    />
+
+    <!-- 关键词（中英混合） -->
+    <meta
+      name="keywords"
+      content="ASCII tree, tree diagram, Markdown, text visualization, hierarchy generator, ASCII 树, 目录结构, 层次结构, Markdown 目录"
+    />
+
+    <!-- Open Graph (用于社交媒体预览) -->
+    <meta
+      property="og:title"
+      content="TreeScii - Generate Beautiful ASCII Trees | 生成美观的 ASCII 树"
+    />
+    <meta
+      property="og:description"
+      content="Create and share ASCII trees effortlessly with TreeScii. | 使用 TreeScii 轻松创建和分享 ASCII 树。"
+    />
+    <meta
+      property="og:image"
+      content="https://ascii-tree.mirotoys.com/preview.png"
+    />
+    <meta property="og:url" content="https://ascii-tree.mirotoys.com/" />
+    <meta property="og:type" content="website" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="TreeScii - Generate Beautiful ASCII Trees | 生成美观的 ASCII 树"
+    />
+    <meta
+      name="twitter:description"
+      content="Create and share ASCII trees effortlessly with TreeScii. | 使用 TreeScii 轻松创建和分享 ASCII 树。"
+    />
+    <meta
+      name="twitter:image"
+      content="https://ascii-tree.mirotoys.com/preview.png"
+    />
+
+    <!-- `hreflang` 指向同一个 URL，避免因多语言导致 SEO 降权 -->
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href="https://ascii-tree.mirotoys.com/"
+    />
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://ascii-tree.mirotoys.com/"
+    />
+    <link
+      rel="alternate"
+      hreflang="zh-CN"
+      href="https://ascii-tree.mirotoys.com/"
+    />
+    <link
+      rel="alternate"
+      hreflang="zh-TW"
+      href="https://ascii-tree.mirotoys.com/"
+    />
+
+    <!-- 结构化数据 (JSON-LD) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "TreeScii",
+        "url": "https://ascii-tree.mirotoys.com/",
+        "description": "Create and share ASCII trees effortlessly with TreeScii. | 使用 TreeScii 轻松创建和分享 ASCII 树。",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "All",
+        "inLanguage": ["en", "zh-CN", "zh-TW"]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
