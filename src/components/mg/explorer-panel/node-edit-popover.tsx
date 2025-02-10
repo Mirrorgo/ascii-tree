@@ -9,6 +9,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { ReactElement, useRef } from "react";
 import { PopoverProps } from "@radix-ui/react-popover";
+import { useTranslation } from "react-i18next";
 
 interface NodeEditPopoverProps extends PopoverProps {
   defaultName: string;
@@ -30,6 +31,7 @@ export function NodeEditPopover({
   setOpen,
   ...popoverProps
 }: NodeEditPopoverProps) {
+  const { t } = useTranslation();
   const nameRef = useRef<HTMLInputElement>(null);
   const commentRef = useRef<HTMLInputElement>(null);
   const folderRef = useRef<HTMLButtonElement>(null);
@@ -66,7 +68,7 @@ export function NodeEditPopover({
         <div className="space-y-2">
           <div className="grid gap-2">
             <div className="grid grid-cols-3 items-center gap-2 h-8">
-              <Label htmlFor="node-name">Name</Label>
+              <Label htmlFor="node-name">{t("nodeEditPopover.name")}</Label>
               <Input
                 id="node-name"
                 defaultValue={defaultName}
@@ -75,7 +77,9 @@ export function NodeEditPopover({
               />
             </div>
             <div className="grid grid-cols-3 items-center gap-2 h-8">
-              <Label htmlFor="node-comment">Comment</Label>
+              <Label htmlFor="node-comment">
+                {t("nodeEditPopover.comment")}
+              </Label>
               <Input
                 id="node-comment"
                 defaultValue={defaultComment ?? ""}
@@ -84,7 +88,9 @@ export function NodeEditPopover({
               />
             </div>
             <div className="grid grid-cols-3 items-center gap-2 h-8">
-              <Label htmlFor="node-is-folder">Is Folder</Label>
+              <Label htmlFor="node-is-folder">
+                {t("nodeEditPopover.isFolder")}
+              </Label>
               <Switch
                 ref={folderRef}
                 id="node-is-folder"
@@ -95,10 +101,10 @@ export function NodeEditPopover({
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={handleCancel}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button size="sm" onClick={handleSave}>
-            Save
+            {t("save")}
           </Button>
         </div>
       </PopoverContent>

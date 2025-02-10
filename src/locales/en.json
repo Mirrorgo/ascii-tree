@@ -3,6 +3,8 @@
   "paste_ascii_tree": "Paste ASCII Tree",
   "select_project_template": "Select a project template",
   "paste_ascii_tree_placeholder": "Paste your ASCII tree here or select a template above",
+  "cancel": "Cancel",
+  "save": "Save",
   "error": "Error",
   "ok": "OK",
   "ascii": "ASCII Tree",
@@ -106,5 +108,10 @@
         "content": "The node '{node}' appears without a valid parent. This may be due to incorrect indentation or missing parent nodes."
       }
     }
+  },
+  "nodeEditPopover": {
+    "name": "Name",
+    "comment": "Comment",
+    "isFolder": "Is Folder"
   }
 }

@@ -3,6 +3,8 @@
   "paste_ascii_tree": "粘贴 ASCII 树",
   "select_project_template": "选择一个项目模板",
   "paste_ascii_tree_placeholder": "将您的 ASCII 树粘贴在此处或选择上面的模板",
+  "cancel": "取消",
+  "save": "保存",
   "error": "错误",
   "ok": "确定",
   "ascii": "ASCII 树",
@@ -106,5 +108,10 @@
         "content": "节点 '{node}' 没有有效的父节点。这可能是由于缩进错误或缺少父节点所致。"
       }
     }
+  },
+  "nodeEditPopover": {
+    "name": "名称",
+    "comment": "注释",
+    "isFolder": "文件夹"
   }
 }
