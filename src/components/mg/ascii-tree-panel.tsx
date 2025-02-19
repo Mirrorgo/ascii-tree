@@ -91,8 +91,6 @@ const AsciiTreePanel = ({
     setIsAsciiTreeCollapse(!isAsciiTreeCollapse);
   };
 
-
-
   useEffect(() => {
     setIsTransitioning(true);
   }, [isAsciiTreeCollapse]);
@@ -129,6 +127,7 @@ const AsciiTreePanel = ({
             size="sm"
             onClick={handleToggleToolbar}
             pressed={isToolbarVisible}
+            className={`${isAsciiTreeCollapse ? "invisible" : "visible"}`}
           >
             <Settings2 />
           </Toggle>
@@ -138,7 +137,7 @@ const AsciiTreePanel = ({
         </div>
       </div>
 
-      {isToolbarVisible && (
+      {!isAsciiTreeCollapse && isToolbarVisible && (
         <div className="flex justify-around">
           <div className="flex items-center space-x-1">
             <Switch
@@ -162,8 +161,11 @@ const AsciiTreePanel = ({
       )}
 
       {!isAsciiTreeCollapse && (
-        <div 
-        className={`flex-1 px-2 py-1 font-mono whitespace-pre ${isTransitioning ? 'overflow-hidden' : 'overflow-auto'}`}>
+        <div
+          className={`flex-1 px-2 py-1 font-mono whitespace-pre ${
+            isTransitioning ? "overflow-hidden" : "overflow-auto"
+          }`}
+        >
           {rawAscii.split("\n").map((line, index) => (
             <AsciiLine
               key={index}
