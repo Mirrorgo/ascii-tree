@@ -11,6 +11,7 @@ import {
   MouseEvent,
   RefObject,
   SetStateAction,
+  useEffect,
   useState,
 } from "react";
 import { ImperativePanelHandle } from "react-resizable-panels";
@@ -41,6 +42,7 @@ const AsciiTreePanel = ({
   const [showTrailingSlash, setShowTrailingSlash] = useState(true);
   const [isAsciiColored, setIsAsciiColored] = useState(true);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const { t } = useTranslation();
 
   // 处理ASCII内容
@@ -89,6 +91,12 @@ const AsciiTreePanel = ({
     setIsAsciiTreeCollapse(!isAsciiTreeCollapse);
   };
 
+
+
+  useEffect(() => {
+    setIsTransitioning(true);
+  }, [isAsciiTreeCollapse]);
+
   return (
     <ResizablePanel
       ref={asciiTreeRef}
@@ -99,10 +107,13 @@ const AsciiTreePanel = ({
       collapsedSize={9}
       onCollapse={() => setIsAsciiTreeCollapse(true)}
       onExpand={() => setIsAsciiTreeCollapse(false)}
-      className="flex flex-col h-full"
+      onTransitionEnd={() => setIsTransitioning(false)}
+      className="flex flex-col h-full transition-all duration-300 ease-in-out overflow-hidden"
     >
       <div
-        className="mt-1 px-2 flex justify-between items-center cursor-pointer"
+        className="mt-1 px-3 flex justify-between items-center"
+        role="button"
+        aria-expanded={!isAsciiTreeCollapse}
         onClick={handlePanelToggle}
       >
         {!showExplorerPanel ? (
@@ -150,20 +161,19 @@ const AsciiTreePanel = ({
         </div>
       )}
 
-      <div
-        className={`flex-1 px-2 py-1 font-mono whitespace-pre ${
-          isAsciiTreeCollapse ? "overflow-hidden" : "overflow-auto"
-        }`}
-      >
-        {rawAscii.split("\n").map((line, index) => (
-          <AsciiLine
-            key={index}
-            line={line}
-            showTrailingSlash={showTrailingSlash}
-            isAsciiColored={isAsciiColored}
-          />
-        ))}
-      </div>
+      {!isAsciiTreeCollapse && (
+        <div 
+        className={`flex-1 px-2 py-1 font-mono whitespace-pre ${isTransitioning ? 'overflow-hidden' : 'overflow-auto'}`}>
+          {rawAscii.split("\n").map((line, index) => (
+            <AsciiLine
+              key={index}
+              line={line}
+              showTrailingSlash={showTrailingSlash}
+              isAsciiColored={isAsciiColored}
+            />
+          ))}
+        </div>
+      )}
     </ResizablePanel>
   );
 };
