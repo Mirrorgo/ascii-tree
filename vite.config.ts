@@ -22,7 +22,7 @@ export default defineConfig({
           "Interactive ASCII folder structure diagram generator with powerful editing features and multiple project templatesTreeScii is a powerful ASCII tree generator that lets you create and share beautiful hierarchical structures with ease. | TreeScii 是一个强大的 ASCII 树生成器，让你轻松创建和分享漂亮的层次结构。",
         theme_color: "#ffffff",
         background_color: "#ffffff",
-        display: "fullscreen",
+        display: "standalone",
         start_url: "/",
         id: "/",
         dir: "ltr",
