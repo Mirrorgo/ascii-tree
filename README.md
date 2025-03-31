@@ -23,15 +23,15 @@ Write in the editor:
 
 Get instant ASCII tree:
 ```bash
-src/
-├── components/ # support comment
-│   ├── ui/
-│   └── shared/
-├── pages/
+src
+├── components # support comment
+│   ├── ui
+│   └── shared
+├── pages
 │   ├── index.tsx
 │   └── about.tsx
-└── styles/
-└── globals.css
+└── styles
+    └── globals.css
 ```
 
 
