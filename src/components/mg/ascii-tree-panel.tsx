@@ -49,18 +49,24 @@ const AsciiTreePanel = ({
   const processAsciiContent = (rawAscii: string) => {
     const lines = rawAscii.split("\n");
     const processLine = (rawLine: string) => {
-      const commentMatch = rawLine.match(/^(.*?)#(.*)$/);
+      const match = rawLine.match(/^(\s*)(.*?)$/);
+      if (!match) return rawLine;
+
+      const [, indent, content] = match;
+      const commentMatch = content.match(/^(.*?)#(.*)$/);
       if (!commentMatch) {
         const trimmed = rawLine.trim();
         const isFolder = trimmed.endsWith("/");
         const nameWithoutSlash = isFolder ? trimmed.slice(0, -1) : trimmed;
-        return `${nameWithoutSlash}${showTrailingSlash && isFolder ? "/" : ""}`;
+        return `${indent}${nameWithoutSlash}${
+          showTrailingSlash && isFolder ? "/" : ""
+        }`;
       } else {
         const [, name, comment] = commentMatch;
         const trimmed = name.trim();
         const isFolder = trimmed.endsWith("/");
         const nameWithoutSlash = isFolder ? trimmed.slice(0, -1) : trimmed;
-        return `${nameWithoutSlash}${
+        return `${indent}${nameWithoutSlash}${
           showTrailingSlash && isFolder ? "/" : ""
         } #${comment}`;
       }
