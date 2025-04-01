@@ -55,11 +55,12 @@ function parseAsciiTree(asciiText: string): TreeNode[] {
   const stack: { node: TreeNode; level: number }[] = [];
 
   lines.forEach((line) => {
-    const regex = /^((?:│   |    )*)(?:[├└]─{2,}\s+)(.*)$/;
+    // const regex = /^((?:│   |    )*)(?:[├└]─{2,}\s+)(.*)$/;
+    // 用下面的方案，可以支持更多的分支符号
+    const regex =
+      /^((?:[\│\u2502]\s*|\s+)*)(?:[\├\└\u251C\u2514][\─\-\u2500]+\s+)(.*)$/;
     const match = line.match(regex);
-
     if (match) {
-      const indentBlocks = match[1];
       const content = match[2].trim();
       const sharpIndex = content.indexOf("#");
       let name = "";
@@ -71,13 +72,18 @@ function parseAsciiTree(asciiText: string): TreeNode[] {
         name = content;
       }
 
-      // 计算缩进块的数量，每个 "│   " 或 "    " 块代表一级缩进
-      const indentBlockPattern = /(?:│   |    )/g;
-      const indentMatches = indentBlocks.match(indentBlockPattern);
-      const numIndent = indentMatches ? indentMatches.length : 0;
+      // // 计算缩进块的数量，每个 "│   " 或 "    " 块代表一级缩进
+      // const indentBlockPattern = /(?:│   |    )/g;
+      // const indentMatches = indentBlocks.match(indentBlockPattern);
+      // const numIndent = indentMatches ? indentMatches.length : 0;
 
-      // 当前节点的层级为缩进块数 +1（因为有分支符号）
-      const level = numIndent + 1;
+      // // 当前节点的层级为缩进块数 +1（因为有分支符号）
+      // const level = numIndent + 1;
+
+      // 提取和计算缩进级别的改进方法
+      const indentBlockCount = (match[1].match(/[\│\u2502]|(?:\s{4})/g) || [])
+        .length;
+      const level = indentBlockCount + 1;
 
       const isFolder = name.endsWith("/");
 
@@ -131,7 +137,7 @@ function parseAsciiTree(asciiText: string): TreeNode[] {
       const isFolder = name.endsWith("/");
       const newNode: TreeNode = {
         id: generateId(),
-        name: isFolder ? name : name,
+        name,
         path: isFolder ? name.slice(0, -1) + "/" : name,
         comment,
         // children 未设置，默认为 undefined
