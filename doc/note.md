@@ -117,7 +117,8 @@ TODO
 
 enable comment in file and get gitignore as directoryIgnore
 
-
+DONE
+- pwa
 
 1.0之前必须做的事情
 - done
@@ -128,13 +129,15 @@ enable comment in file and get gitignore as directoryIgnore
     - 手动填入内容，光标移动过去
   - 有comment的部分需要正常着色
   - 版本号1.0
-
-- todo
-  - 没有已知bug
   - 支持中文
 
 
+- todo
+  - 没有已知bug
+
+
 1.0后的feature
+- 性能优化，优化长文本，改造成类ast的解析模式
 - 统一comment有关的识别逻辑
 - 支持强制解析ascii tree
 - 统一validate逻辑
@@ -165,13 +168,14 @@ enable comment in file and get gitignore as directoryIgnore
   - ai fix ascii tree
   - 限额时的提示，从一个云函数或者云端数据库配置
 - 右侧更新记录
-- pwa
 - folder view选定后 sort文件夹下all内容
 - 节点拖拽排序
 - 支持sort，自动sort
 - 从md文档直接读取无序列表，方便网友贡献模板
   - 后续增加从自己的无需列表直接输入，这样一些不方便传上去的也能用了，比如自己公司内网的
 - profiler性能优化
+- feature
+  - 优化文件夹视图，让自己能直接看出这个项目的各个核心文件的作用 右侧ai辅助生成对应文件的描述文本
 - contribution之前先发个issue告知一声，看看需不需要，以及是否和我做重了
   - 对于不希望加的功能，提议自己fork
 
@@ -181,7 +185,7 @@ enable comment in file and get gitignore as directoryIgnore
 # 当前可优化
 统一对文本处理的正则：两种
 - ascii
-- md
+- md 
 
 # 坑与bug的解决
 

@@ -52,6 +52,7 @@ import { removeNodes } from "./helper/global.ts";
 import NotificationButton from "./components/mg/notification-button.tsx";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "./components/mg/language-switcher.tsx";
+import AiDialog from "./components/mg/ai-dialog.tsx";
 
 function App() {
   const { toast } = useToast();
@@ -524,6 +525,7 @@ function App() {
               {t("reset")}
             </Button>
             <ShortcutsDialog />
+            <AiDialog />
           </div>
           <AsciiTreeParserDialog
             isAsciiTreeParserDialogOpen={isAsciiTreeParserDialogOpen}

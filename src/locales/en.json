@@ -113,5 +113,31 @@
     "name": "Name",
     "comment": "Comment",
     "isFolder": "Is Folder"
+  },
+  "aiDialog": {
+    "toolTitle": "GitHub Project Structure Generator",
+    "workflow": "Workflow:",
+    "copied": "Copied",
+    "copyPrompt": "Copy Prompt",
+    "checkContent": "Note: Check the generated content",
+    "checkContentReason": ", adjust key descriptions as AI may not accurately capture what you want to emphasize",
+    "tabs": {
+      "markdown": "Generate Markdown with AI",
+      "ascii": "Generate ASCII Tree with AI"
+    },
+    "markdown": {
+      "whyRecommend": "Why recommend this method?",
+      "recommendReason": "AI generates Markdown format more accurately. Direct ASCII tree generation can lead to format errors or incomplete structure",
+      "step1": "1. Copy this prompt and use it on",
+      "step1Cont": "to directly get the project's Markdown list structure",
+      "step2": "2. Copy the generated Markdown structure to this tool for direct editing",
+      "promptText": "Please generate an annotated directory tree structure for GitHub project [GitHub repository link], meeting the following requirements:\n1. Use Markdown unordered list format to draw the tree structure\n2. Include all important files and folders (please ignore node_modules, .git, dist, build and other common system/temporary folders)\n3. Add concise function description comments for each file and folder\n4. Identify core files and their roles\n5. Indicate main technology stack and dependencies\n6. Strictly generate the tree structure based on actual repository content, do not add non-existent files or folders\n7. Tree structure format example (for format reference only, do not copy the file structure):\n```markdown\n- Project Root/\n  - file1.ext # Function description for this file\n  - folder1/ # Purpose description for this folder\n    - subfile1.ext # Subfile function description\n    - subfolder/ # Subfolder purpose description\n  - file2.ext # Function description for this file (note if it's a core file)\n```"
+    },
+    "ascii": {
+      "step1": "1. Copy this prompt and use it on",
+      "step1Cont": "to get the project's ASCII tree structure",
+      "step2": "2. Copy the generated ASCII tree to this tool to convert it to Markdown unordered list format for easy secondary editing",
+      "promptText": "Please generate an annotated directory tree structure for GitHub project [GitHub repository link], meeting the following requirements:\n1. Use ASCII characters (├ ─ │ └) to draw the tree structure\n2. Include all important files and folders (please ignore node_modules, .git, dist, build and other common system/temporary folders)\n3. Add concise function description comments for each file and folder\n4. Identify core files and their roles\n5. Indicate main technology stack and dependencies\n6. Strictly generate the tree structure based on actual repository content, do not add non-existent files or folders\n7. Tree structure format example (for format reference only, do not copy the file structure):\n```plaintext\nProject Root/\n├── file1.ext      # Function description for this file\n├── folder1/       # Purpose description for this folder\n│   ├── subfile1.ext  # Subfile function description\n│   └── subfolder/    # Subfolder purpose description\n└── file2.ext      # Function description for this file (note if it's a core file)\n```"
+    }
   }
 }
