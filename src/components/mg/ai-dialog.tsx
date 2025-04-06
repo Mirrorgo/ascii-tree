@@ -71,7 +71,7 @@ const MarkdownWorkflow = () => {
         </div>
 
         <div className="relative">
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2 right-4">
             <Button
               size="icon"
               variant="ghost"
@@ -140,7 +140,7 @@ const AsciiWorkflow = () => {
           {t("aiDialog.checkContentReason")}
         </p>
         <div className="relative">
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2 right-4">
             <Button
               size="icon"
               variant="ghost"
