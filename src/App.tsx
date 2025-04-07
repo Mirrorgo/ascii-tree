@@ -37,7 +37,8 @@ import {
 } from "./components/ui/dropdown-menu";
 
 import { INITIAL_TREE } from "./helper/constants";
-import { ParseErrorType, TextState, TreeNode } from "./typings";
+// import { ParseErrorType, TextState, TreeNode } from "./typings";
+import { TextState, TreeNode } from "./typings";
 import ShortcutsDialog from "./components/mg/shortcuts";
 import AsciiTreeParserDialog from "./components/mg/ascii-tree-parser-dialog";
 import AsciiTreePanel from "./components/mg/ascii-tree-panel";
@@ -224,12 +225,12 @@ function App() {
   const [isAsciiTreeCollapse, setIsAsciiTreeCollapse] = useState(false);
 
   const { defaultSize, maxSize, minSize } = useResponsivePanel();
-  const getAsciiErrorInfo = (type: ParseErrorType) => {
-    return {
-      title: t(`parseError.ascii.${type}.title`),
-      content: t(`parseError.ascii.${type}.content`),
-    };
-  };
+  // const getAsciiErrorInfo = (type: ParseErrorType) => {
+  //   return {
+  //     title: t(`parseError.ascii.${type}.title`),
+  //     content: t(`parseError.ascii.${type}.content`),
+  //   };
+  // };
 
   function handleFormatMarkdownList() {
     if (!textState.isValid) return;
@@ -299,23 +300,27 @@ function App() {
   function handleParseAsciiTree(): void {
     const asciiText = asciiTreeTextAreaRef.current?.value;
     if (!asciiText) return;
-    const validateResult = isValidAsciiTree(asciiText);
 
-    if (validateResult.valid) {
-      try {
-        resetEditorFromAsciiTree(asciiText);
-      } catch (error) {
-        setAsciiParseError(
-          error instanceof Error ? error.message : String(error)
-        );
-        console.error("Error parsing ASCII tree:", error);
-      }
-    } else {
-      const err = validateResult.errors[0];
-      const { content, title } = getAsciiErrorInfo(err.type);
-      const errMsg = `${title}: ${content} [Ln ${err.location.line}]`;
-      setAsciiParseError(errMsg);
-    }
+    // FIXME：暂时先去掉此处的validate
+    resetEditorFromAsciiTree(asciiText);
+    return;
+
+    // const validateResult = isValidAsciiTree(asciiText);
+    // if (validateResult.valid) {
+    //   try {
+    //     resetEditorFromAsciiTree(asciiText);
+    //   } catch (error) {
+    //     setAsciiParseError(
+    //       error instanceof Error ? error.message : String(error)
+    //     );
+    //     console.error("Error parsing ASCII tree:", error);
+    //   }
+    // } else {
+    //   const err = validateResult.errors[0];
+    //   const { content, title } = getAsciiErrorInfo(err.type);
+    //   const errMsg = `${title}: ${content} [Ln ${err.location.line}]`;
+    //   setAsciiParseError(errMsg);
+    // }
   }
 
   function handleReset(): void {

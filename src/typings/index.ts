@@ -16,6 +16,7 @@ interface ParseError {
     line: number;
     column: number;
   };
+  token: string;
 }
 
 interface TreeNode {

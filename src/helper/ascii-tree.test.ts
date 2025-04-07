@@ -219,6 +219,7 @@ describe("Tree ASCII Processing", () => {
           column: 0,
           line: 0,
         },
+        token: "",
         type: "emptyLine",
       });
     });
@@ -282,7 +283,7 @@ describe("Tree ASCII Processing", () => {
         expect.objectContaining({
           type: "duplicateNodeName",
           location: {
-            column: 1,
+            column: 5,
             line: 3,
           },
         })
@@ -292,7 +293,7 @@ describe("Tree ASCII Processing", () => {
         expect.objectContaining({
           type: "duplicateNodeName",
           location: {
-            column: 1,
+            column: 5,
             line: 4,
           },
         })

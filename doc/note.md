@@ -36,9 +36,13 @@
 - ascii-tree view
   - resizable
   - collapsible
+- pwa
+  - 基础支持 & 基础离线功能
 
 
 ## 注意
+
+> 当前版本对额外 水平符号的支持还不够完善🤔，这部分在ascii-tree校验的时候省略了
 
 # 后续idea
 
@@ -117,8 +121,7 @@ TODO
 
 enable comment in file and get gitignore as directoryIgnore
 
-DONE
-- pwa
+
 
 1.0之前必须做的事情
 - done
