@@ -455,7 +455,8 @@ function parseAsciiTree(asciiText: string): TreeNode[] {
   const { tokens, errors: lexErrors } = tokenize(asciiText);
 
   // 语法分析
-  const { ast, errors: parseErrors } = parse(tokens, lexErrors);
+  // const { ast, errors: parseErrors } = parse(tokens, lexErrors);
+  const { ast } = parse(tokens, lexErrors);
 
   // 转换为TreeNode
   return astToTreeNodes(ast);
